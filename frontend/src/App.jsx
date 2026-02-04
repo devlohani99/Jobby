@@ -61,6 +61,13 @@ const AppContent = () => {
               {/* Desktop Navigation */}
               <div className="hidden md:flex space-x-4">
                 <button
+                  onClick={() => setCurrentView('homepage')}
+                  className="px-3 py-2 rounded-lg font-medium text-sm transition-colors text-gray-600 hover:text-blue-600 hover:bg-blue-50"
+                >
+                  <span className="mr-2">🏠</span>
+                  Home
+                </button>
+                <button
                   onClick={() => setDashboardView('dashboard')}
                   className={`px-3 py-2 rounded-lg font-medium text-sm transition-colors ${
                     dashboardView === 'dashboard'
@@ -166,6 +173,16 @@ const AppContent = () => {
           {showMobileMenu && (
             <div className="md:hidden border-t border-gray-200 pt-4 pb-3">
               <div className="space-y-1">
+                <button
+                  onClick={() => {
+                    setCurrentView('homepage');
+                    setShowMobileMenu(false);
+                  }}
+                  className="w-full text-left px-3 py-2 rounded-lg font-medium text-sm transition-colors text-gray-600 hover:text-blue-600 hover:bg-blue-50"
+                >
+                  <span className="mr-2">🏠</span>
+                  Home
+                </button>
                 <button
                   onClick={() => {
                     setDashboardView('dashboard');

@@ -7,11 +7,24 @@ exports.createJob = async (req, res) => {
   try {
     const jobData = {
       ...req.body,
-      postedBy: req.user.id
+      postedBy: req.user.id,
+      // Ensure required location fields are provided with defaults if missing
+      location: {
+        city: req.body.location?.city || req.body.city || 'Not specified',
+        state: req.body.location?.state || req.body.state || 'Not specified', 
+        country: req.body.location?.country || req.body.country || 'India',
+        remote: req.body.location?.remote || req.body.remote || false
+      },
+      // Ensure isActive is explicitly set
+      isActive: req.body.isActive !== undefined ? req.body.isActive : true
     };
+
+    console.log('Creating job with data:', JSON.stringify(jobData, null, 2));
 
     const job = new Job(jobData);
     await job.save();
+
+    console.log('Job created successfully:', job.title, 'ID:', job._id);
 
     res.status(201).json({
       success: true,
@@ -23,6 +36,7 @@ exports.createJob = async (req, res) => {
     
     if (error.name === 'ValidationError') {
       const errors = Object.values(error.errors).map(err => err.message);
+      console.error('Validation errors:', errors);
       return res.status(400).json({
         success: false,
         message: 'Validation failed',
@@ -32,7 +46,8 @@ exports.createJob = async (req, res) => {
 
     res.status(500).json({
       success: false,
-      message: 'Failed to create job'
+      message: 'Failed to create job',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };
@@ -59,6 +74,9 @@ exports.getAllJobs = async (req, res) => {
 
     // Build filter object
     const filter = { isActive: true };
+
+    console.log('getAllJobs called with params:', req.query);
+    console.log('Initial filter:', filter);
 
     if (search) {
       filter.$text = { $search: search };
@@ -93,6 +111,8 @@ exports.getAllJobs = async (req, res) => {
       filter['experience.min'] = { $lte: parseInt(experience) };
     }
 
+    console.log('Final filter:', JSON.stringify(filter, null, 2));
+
     // Build sort object
     const sort = {};
     if (search && !sortBy) {
@@ -109,6 +129,9 @@ exports.getAllJobs = async (req, res) => {
       .lean();
 
     const total = await Job.countDocuments(filter);
+
+    console.log(`Found ${jobs.length} jobs out of ${total} total matching filter`);
+    console.log('Jobs found:', jobs.map(job => `${job.title} (${job.company}) - Active: ${job.isActive}`));
 
     res.json({
       success: true,

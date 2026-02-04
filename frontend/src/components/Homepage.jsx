@@ -31,7 +31,8 @@ const Homepage = ({ onSignIn, onSignUp, onPostJob }) => {
       }
       
       // Using backend proxy for Remotive API to avoid CORS issues
-      const response = await fetch(`http://localhost:5000/api/remotive-jobs?${queryParams.toString()}`);
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+      const response = await fetch(`${API_BASE_URL}/remotive-jobs?${queryParams.toString()}`);
       
       // The backend now always returns 200 with data, even if external APIs fail
       const data = await response.json();
@@ -40,9 +41,10 @@ const Homepage = ({ onSignIn, onSignUp, onPostJob }) => {
       // Show different messages based on data source
       if (data.message) {
         if (data.source === 'mock' || data.source === 'fallback') {
-          setError(`${data.message} Try refreshing in a moment for live results.`);
+          // Don't show error for mock data, just quietly use it
+          console.log(`Using ${data.source} data:`, data.message);
         } else if (data.source === 'cached') {
-          setError(data.message);
+          console.log(data.message);
         }
       } else if (data.jobs && data.jobs.length === 0) {
         setError('No jobs found for your search. Try different keywords or location.');

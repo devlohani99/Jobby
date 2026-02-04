@@ -208,8 +208,9 @@ const JobSeekerDashboard = ({ onNavigateHome }) => {
       const category = filters.category || '';
       
 
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
       const response = await fetch(
-        `http://localhost:5000/api/remotive-jobs?search=${encodeURIComponent(searchQuery)}${category ? `&category=${encodeURIComponent(category)}` : ''}&limit=30`
+        `${API_BASE_URL}/remotive-jobs?search=${encodeURIComponent(searchQuery)}${category ? `&category=${encodeURIComponent(category)}` : ''}&limit=30`
       );
       
       if (!response.ok) {
@@ -246,7 +247,32 @@ const JobSeekerDashboard = ({ onNavigateHome }) => {
       setJobs(formattedJobs);
     } catch (error) {
       console.error('Error fetching remote jobs:', error);
-      setJobs([]);
+      // Show some fallback jobs even on error
+      const fallbackJobs = [
+        {
+          _id: 'fallback_1',
+          title: 'Software Developer',
+          company: 'Tech Solutions',
+          location: 'Remote • Worldwide',
+          salary: '$60,000 - $90,000',
+          employmentType: 'Full-time',
+          jobType: 'Remote',
+          description: 'Join our team as a Software Developer working on innovative projects.',
+          requirements: [],
+          responsibilities: [],
+          skills: ['JavaScript', 'React', 'Node.js'],
+          benefits: [],
+          postedAgo: 'Recently posted',
+          applications: 15,
+          views: 120,
+          status: 'active',
+          category: 'Technology',
+          isRemote: true,
+          originalUrl: '#',
+          companyLogo: 'https://via.placeholder.com/50'
+        }
+      ];
+      setJobs(fallbackJobs);
     } finally {
       setLoading(false);
     }

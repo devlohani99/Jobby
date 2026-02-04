@@ -241,7 +241,7 @@ const ApplicationCard = ({ application }) => {
           
           {application.resume && (
             <a
-              href={`http://localhost:5000/uploads/resumes/${application.resume.filename}`}
+              href={`${import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:5000'}/uploads/resumes/${application.resume.filename}`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center"

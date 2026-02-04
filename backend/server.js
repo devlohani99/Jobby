@@ -46,6 +46,7 @@ app.use('/api/auth', logoutRoute);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/applications', applicationRoutes);
 app.use('/api', remoteJobsRoute);
+app.use('/api', require('./routes/marketIntelligence'));
 
 app.get('/', (req, res) => {
   res.json({ 

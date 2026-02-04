@@ -483,7 +483,7 @@ const EmployerDashboard = ({ onNavigateHome }) => {
       {showDeleteConfirm && jobToDelete && (
         <div className="fixed inset-0 flex items-center justify-center z-50">
           {/* Blur background overlay */}
-          <div className="absolute inset-0 bg-black bg-opacity-30 backdrop-blur-sm" onClick={() => setShowDeleteConfirm(false)}></div>
+          <div className="absolute inset-0 backdrop-blur-md" onClick={() => setShowDeleteConfirm(false)}></div>
           <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Delete Job Posting</h3>
             <p className="text-gray-600 mb-6">

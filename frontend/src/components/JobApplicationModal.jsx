@@ -37,7 +37,7 @@ const JobApplicationModal = ({ job, isOpen, onClose, onApplicationSuccess }) => 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
       {/* Blur background overlay */}
-      <div className="absolute inset-0 bg-black bg-opacity-30 backdrop-blur-sm" onClick={onClose}></div>
+      <div className="absolute inset-0 backdrop-blur-md" onClick={onClose}></div>
       <div className="bg-white rounded-xl max-w-md w-full">
         {/* Header */}
         <div className="border-b border-gray-200 px-6 py-4 rounded-t-xl">

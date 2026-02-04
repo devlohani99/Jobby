@@ -47,6 +47,7 @@ app.use('/api/jobs', jobRoutes);
 app.use('/api/applications', applicationRoutes);
 app.use('/api', remoteJobsRoute);
 app.use('/api', require('./routes/marketIntelligence'));
+app.use('/api', require('./routes/health'));
 
 app.get('/', (req, res) => {
   res.json({ 

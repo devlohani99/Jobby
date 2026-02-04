@@ -9,6 +9,7 @@ import EmployerDashboard from './components/EmployerDashboard';
 import Profile from './components/Profile';
 import MarketIntelligenceDashboard from './components/MarketIntelligenceDashboard';
 import LoadingScreen from './components/LoadingScreen';
+import BackendLoadingScreen from './components/BackendLoadingScreen';
 import Footer from './components/Footer';
 import Homepage from './components/Homepage';
 
@@ -17,9 +18,42 @@ const AppContent = () => {
   const [dashboardView, setDashboardView] = useState('dashboard'); // dashboard, profile
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [backendReady, setBackendReady] = useState(false);
+  const [checkingBackend, setCheckingBackend] = useState(true);
   const { user, isAuthenticated, loading, logout } = useAuth();
   const userMenuRef = useRef(null);
 
+  // Check backend health on app load
+  useEffect(() => {
+    const checkBackendHealth = async () => {
+      try {
+        const response = await fetch('https://jobby-backend-qulb.onrender.com/api/health', {
+          method: 'GET',
+          timeout: 10000
+        });
+        if (response.ok) {
+          setBackendReady(true);
+        }
+      } catch (error) {
+        console.log('Backend still starting...');
+        // Backend not ready yet, loading screen will handle retries
+      } finally {
+        setCheckingBackend(false);
+      }
+    };
+
+    checkBackendHealth();
+  }, []);
+
+  const handleBackendReady = () => {
+    setBackendReady(true);
+    setCheckingBackend(false);
+  };
+
+  const handleAuthSuccess = () => {
+    // User just logged in, they'll see the backend loading screen if needed
+    // The authentication state will trigger the backend check
+  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -45,6 +79,11 @@ const AppContent = () => {
 
   if (loading) {
     return <LoadingScreen message="Initializing your workspace..." />;
+  }
+
+  // Show backend loading screen if backend is not ready and user is authenticated
+  if (isAuthenticated && !backendReady) {
+    return <BackendLoadingScreen onBackendReady={handleBackendReady} />;
   }
 
   
@@ -319,9 +358,9 @@ const AppContent = () => {
 
         
           {currentView === 'signin' ? (
-            <SignIn onSwitchToSignUp={() => setCurrentView('signup')} />
+            <SignIn onSwitchToSignUp={() => setCurrentView('signup')} onAuthSuccess={handleAuthSuccess} />
           ) : (
-            <SignUp onSwitchToSignIn={() => setCurrentView('signin')} />
+            <SignUp onSwitchToSignIn={() => setCurrentView('signin')} onAuthSuccess={handleAuthSuccess} />
           )}
           <Footer />
         </div>

@@ -330,7 +330,7 @@ const AppContent = () => {
           {/* Top Navigation Bar */}
           <nav className="absolute top-0 left-0 right-0 z-10 p-4">
             <div className="flex justify-between items-center">
-              <div className="text-white">
+              <div className="text-gray-900">
                 <button 
                   onClick={() => setCurrentView('homepage')}
                   className="text-left hover:opacity-80 transition-opacity"
@@ -345,8 +345,8 @@ const AppContent = () => {
                     onClick={() => setCurrentView('signin')}
                     className={`px-6 py-2 rounded-full font-medium transition-all duration-200 ${
                       currentView === 'signin'
-                        ? 'bg-green-500 text-white shadow-md'
-                        : 'text-gray-600 hover:text-green-500 hover:bg-green-50'
+                        ? 'bg-blue-400 text-white shadow-md'
+                        : 'text-gray-600 hover:text-blue-400 hover:bg-blue-50'
                     }`}
                   >
                     Sign In

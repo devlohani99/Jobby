@@ -134,7 +134,7 @@ const NotificationPanel = ({ isOpen, onClose }) => {
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-end">
+    <div className="fixed inset-0 z-50 flex justify-end">
       <div className="bg-white w-full max-w-md h-full shadow-xl overflow-hidden">
         {/* Header */}
         <div className="bg-white border-b border-gray-200 px-6 py-4">

@@ -18,8 +18,18 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const token = tokenManager.getToken();
-    if (token) {
-      setUser({ token });
+    const storedUser = localStorage.getItem('user');
+    
+    if (token && storedUser) {
+      try {
+        const userData = JSON.parse(storedUser);
+        setUser(userData);
+      } catch (error) {
+        console.error('Error parsing stored user data:', error);
+        // If stored user data is corrupted, clear it
+        localStorage.removeItem('user');
+        tokenManager.removeToken();
+      }
     }
     setLoading(false);
   }, []);
@@ -32,6 +42,7 @@ export const AuthProvider = ({ children }) => {
       
       if (response.success) {
         tokenManager.setToken(response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
         setUser(response.data.user);
         return { success: true };
       }
@@ -51,6 +62,7 @@ export const AuthProvider = ({ children }) => {
       
       if (response.success) {
         tokenManager.setToken(response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
         setUser(response.data.user);
         return { success: true };
       }
@@ -69,6 +81,7 @@ export const AuthProvider = ({ children }) => {
       console.error(error);
     } finally {
       tokenManager.removeToken();
+      localStorage.removeItem('user');
       setUser(null);
       setError('');
     }

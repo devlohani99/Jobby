@@ -61,6 +61,13 @@ const JobPostingModal = ({ onClose, onJobPosted, isEdit = false, jobData = null 
   const [error, setError] = useState('');
   const [currentStep, setCurrentStep] = useState(1);
 
+  const handleKeyDown = (e) => {
+    // Prevent Enter key from submitting form unless we're on step 3
+    if (e.key === 'Enter' && currentStep !== 3) {
+      e.preventDefault();
+    }
+  };
+
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     
@@ -118,6 +125,12 @@ const JobPostingModal = ({ onClose, onJobPosted, isEdit = false, jobData = null 
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log('Form submitted, currentStep:', currentStep);
+    
+    // Only allow submission on the final step
+    if (currentStep !== 3) {
+      console.log('Form submission prevented - not on final step');
+      return;
+    }
     
     setIsSubmitting(true);
     setError('');
@@ -314,7 +327,7 @@ const JobPostingModal = ({ onClose, onJobPosted, isEdit = false, jobData = null 
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6">
+        <form onSubmit={handleSubmit} onKeyDown={handleKeyDown} className="p-6">
           {error && (
             <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
               {error}

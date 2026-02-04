@@ -148,47 +148,53 @@ const JobSeekerDashboard = ({ onNavigateHome }) => {
     try {
       setLoading(true);
       const params = {
-        search: searchTerm,
-        category: filters.category,
-        location: filters.location,
-        employmentType: filters.employmentType,
-        jobType: filters.jobType,
+        search: searchTerm || undefined,
+        category: filters.category || undefined,
+        location: filters.location || undefined,
+        employmentType: filters.employmentType || undefined,
+        jobType: filters.jobType || undefined,
         limit: 50,
         page: 1
       };
       
+      // Remove undefined values
+      Object.keys(params).forEach(key => params[key] === undefined && delete params[key]);
+      
       console.log('Fetching jobs with params:', params);
       const response = await jobAPI.getAllJobs(params);
-      console.log('API response:', response);
+      console.log('Full API response:', response);
       
-      const jobs = response.jobs || response.data || [];
-      console.log('Jobs received:', jobs.length, jobs);
-      
-    
-      const formattedJobs = jobs.map(job => ({
-        _id: job._id,
-        title: job.title,
-        company: job.company,
-        location: job.location,
-        salary: job.salary,
-        employmentType: job.employmentType,
-        jobType: job.jobType,
-        description: job.description,
-        requirements: job.requirements,
-        responsibilities: job.responsibilities,
-        skills: job.skills || [],
-        benefits: job.benefits || [],
-        postedAgo: job.createdAt ? getTimeAgo(job.createdAt) : 'Recently posted',
-        applications: job.applicationCount || 0,
-        views: job.views || 0,
-        status: job.isActive ? 'active' : 'inactive',
-        category: job.category
-      }));
+      // The response should have a jobs array
+      if (response && response.jobs && Array.isArray(response.jobs)) {
+        console.log('Jobs received:', response.jobs.length, response.jobs);
+        
+        const formattedJobs = response.jobs.map(job => ({
+          _id: job._id,
+          title: job.title,
+          company: job.company,
+          location: job.location,
+          salary: job.salary,
+          employmentType: job.employmentType,
+          jobType: job.jobType,
+          description: job.description,
+          requirements: job.requirements || [],
+          responsibilities: job.responsibilities || [],
+          skills: job.skills || [],
+          benefits: job.benefits || [],
+          postedAgo: job.createdAt ? getTimeAgo(job.createdAt) : 'Recently posted',
+          applications: job.applicationsCount || 0,
+          views: job.viewsCount || 0,
+          status: job.isActive ? 'active' : 'inactive',
+          category: job.category
+        }));
 
-      setJobs(formattedJobs);
+        setJobs(formattedJobs);
+      } else {
+        console.error('Invalid response format:', response);
+        setJobs([]);
+      }
     } catch (error) {
       console.error('Error fetching jobs:', error);
-    
       setJobs([]);
     } finally {
       setLoading(false);

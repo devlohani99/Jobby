@@ -20,7 +20,9 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response.data,
   (error) => {
-    if (error.response?.status === 401) {
+    // Only redirect to login on 401 if there's a token (authenticated request failed)
+    // Don't redirect during sign-in attempts
+    if (error.response?.status === 401 && localStorage.getItem('token')) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/';

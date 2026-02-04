@@ -129,16 +129,19 @@ const JobPostingModal = ({ onClose, onJobPosted, isEdit = false, jobData = null 
     }
 
     try {
+      // Auto-fill empty optional fields with default values or "N/A"
       const jobData = {
         title: formData.title.trim(),
         company: formData.company.trim(),
         description: formData.description.trim(),
         requirements: Array.isArray(formData.requirements) 
-          ? formData.requirements.filter(req => req && req.trim()).map(req => req.trim())
-          : formData.requirements 
+          ? (formData.requirements.filter(req => req && req.trim()).length > 0 
+             ? formData.requirements.filter(req => req && req.trim()).map(req => req.trim())
+             : ['N/A'])
+          : (formData.requirements && formData.requirements.trim()
             ? [formData.requirements.trim()]
-            : [],
-        responsibilities: formData.responsibilities?.trim() || '',
+            : ['N/A']),
+        responsibilities: formData.responsibilities?.trim() || 'N/A',
         location: {
           city: formData.location?.city?.trim() || 'Not specified',
           state: formData.location?.state?.trim() || 'Not specified',
@@ -147,8 +150,12 @@ const JobPostingModal = ({ onClose, onJobPosted, isEdit = false, jobData = null 
         employmentType: formData.employmentType || 'full-time',
         jobType: formData.jobType || 'on-site',
         category: formData.category || 'software-development',
-        skills: Array.isArray(formData.skills) ? formData.skills : [],
-        benefits: Array.isArray(formData.benefits) ? formData.benefits : [],
+        skills: Array.isArray(formData.skills) 
+          ? (formData.skills.length > 0 ? formData.skills : ['N/A'])
+          : (formData.skills && formData.skills.trim() ? [formData.skills.trim()] : ['N/A']),
+        benefits: Array.isArray(formData.benefits) 
+          ? (formData.benefits.length > 0 ? formData.benefits : ['N/A'])
+          : (formData.benefits && formData.benefits.trim() ? [formData.benefits.trim()] : ['N/A']),
         salary: {
           min: formData.salary?.min ? parseInt(formData.salary.min) || 0 : 0,
           max: formData.salary?.max ? parseInt(formData.salary.max) || 0 : 0,
@@ -250,7 +257,9 @@ const JobPostingModal = ({ onClose, onJobPosted, isEdit = false, jobData = null 
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      {/* Blur background overlay */}
+      <div className="absolute inset-0 bg-black bg-opacity-30 backdrop-blur-sm" onClick={onClose}></div>
+      <div className="relative bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-xl">
           <div className="flex justify-between items-center">

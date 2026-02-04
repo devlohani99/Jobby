@@ -135,7 +135,9 @@ const NotificationPanel = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
-      <div className="bg-white w-full max-w-md h-full shadow-xl overflow-hidden">
+      {/* Blur background overlay */}
+      <div className="absolute inset-0 bg-black bg-opacity-30 backdrop-blur-sm" onClick={onClose}></div>
+      <div className="relative bg-white w-full max-w-md h-full shadow-xl overflow-hidden">
         {/* Header */}
         <div className="bg-white border-b border-gray-200 px-6 py-4">
           <div className="flex items-center justify-between">

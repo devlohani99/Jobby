@@ -86,16 +86,33 @@ const PostJobModal = ({ onClose, onJobCreated }) => {
     setLoading(true);
 
     try {
-      // Process the form data
-      const jobData = {
+      // Auto-fill empty optional fields with "N/A"
+      const autoFilledFormData = {
         ...formData,
-        skills: formData.skills ? formData.skills.split(',').map(skill => skill.trim()) : [],
-        requirements: formData.requirements ? formData.requirements.split('\n').filter(req => req.trim()) : [],
-        benefits: formData.benefits ? formData.benefits.split('\n').filter(benefit => benefit.trim()) : [],
+        skills: formData.skills.trim() || 'N/A',
+        benefits: formData.benefits.trim() || 'N/A',
+        deadline: formData.deadline || null,
         salary: {
           ...formData.salary,
-          min: formData.salary.min ? Number(formData.salary.min) : undefined,
-          max: formData.salary.max ? Number(formData.salary.max) : undefined
+          min: formData.salary.min || 0,
+          max: formData.salary.max || 0
+        },
+        experience: {
+          min: formData.experience.min || 0,
+          max: formData.experience.max || 10
+        }
+      };
+
+      // Process the form data
+      const jobData = {
+        ...autoFilledFormData,
+        skills: autoFilledFormData.skills === 'N/A' ? [] : autoFilledFormData.skills.split(',').map(skill => skill.trim()),
+        requirements: formData.requirements ? formData.requirements.split('\n').filter(req => req.trim()) : ['N/A'],
+        benefits: autoFilledFormData.benefits === 'N/A' ? ['N/A'] : autoFilledFormData.benefits.split('\n').filter(benefit => benefit.trim()),
+        salary: {
+          ...autoFilledFormData.salary,
+          min: autoFilledFormData.salary.min ? Number(autoFilledFormData.salary.min) : 0,
+          max: autoFilledFormData.salary.max ? Number(autoFilledFormData.salary.max) : 0
         },
         experience: {
           min: formData.experience.min ? Number(formData.experience.min) : 0,
@@ -116,7 +133,9 @@ const PostJobModal = ({ onClose, onJobCreated }) => {
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      {/* Blur background overlay */}
+      <div className="absolute inset-0 bg-black bg-opacity-30 backdrop-blur-sm" onClick={onClose}></div>
+      <div className="relative bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           {/* Header */}
           <div className="flex justify-between items-center mb-6">

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { jobAPI, applicationAPI } from '../services/api';
 import JobPostingModal from './JobPostingModal';
 import ApplicationsModal from './ApplicationsModal';
+import MarketIntelligenceDashboard from './MarketIntelligenceDashboard';
 
 // Add custom styles for animations
 const styles = `
@@ -199,6 +200,7 @@ const EmployerDashboard = ({ onNavigateHome }) => {
               { id: 'overview', label: 'Overview', icon: '📊', gradient: 'from-blue-500 to-cyan-500' },
               { id: 'jobs', label: 'My Jobs', icon: '💼', gradient: 'from-purple-500 to-indigo-500' },
               { id: 'applications', label: 'Applications', icon: '📝', gradient: 'from-green-500 to-teal-500' },
+              { id: 'market-intelligence', label: 'Market Intel', icon: '🔍', gradient: 'from-pink-500 to-violet-500' },
               { id: 'analytics', label: 'Analytics', icon: '📈', gradient: 'from-orange-500 to-red-500' }
             ].map(tab => (
               <button
@@ -457,6 +459,12 @@ const EmployerDashboard = ({ onNavigateHome }) => {
                 </button>
               </div>
             )}
+          </div>
+        )}
+
+        {(activeTab === 'market-intelligence') && (
+          <div>
+            <MarketIntelligenceDashboard />
           </div>
         )}
       </div>

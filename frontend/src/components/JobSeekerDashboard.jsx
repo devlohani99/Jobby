@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { jobAPI, applicationAPI } from '../services/api';
 import JobApplicationModal from './JobApplicationModal';
+import MarketIntelligenceDashboard from './MarketIntelligenceDashboard';
 
 
 const styles = `
@@ -442,7 +443,8 @@ const JobSeekerDashboard = ({ onNavigateHome }) => {
           <nav className="flex">
             {[
               { id: 'jobs', label: 'Browse Jobs', icon: '🔍', gradient: 'from-blue-500 to-cyan-500' },
-              { id: 'applications', label: 'My Applications', icon: '📋', gradient: 'from-purple-500 to-pink-500' }
+              { id: 'applications', label: 'My Applications', icon: '📋', gradient: 'from-purple-500 to-pink-500' },
+              { id: 'market-intelligence', label: 'Market Intel', icon: '📊', gradient: 'from-indigo-500 to-violet-500' }
             ].map(tab => (
               <button
                 key={tab.id}

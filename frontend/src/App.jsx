@@ -7,6 +7,7 @@ import Dashboard from './components/Dashboard';
 import JobSeekerDashboard from './components/JobSeekerDashboard';
 import EmployerDashboard from './components/EmployerDashboard';
 import Profile from './components/Profile';
+import MarketIntelligenceDashboard from './components/MarketIntelligenceDashboard';
 import LoadingScreen from './components/LoadingScreen';
 import Homepage from './components/Homepage';
 
@@ -88,6 +89,17 @@ const AppContent = () => {
                 >
                   <span className="mr-2">👤</span>
                   Profile
+                </button>
+                <button
+                  onClick={() => setDashboardView('market-intelligence')}
+                  className={`px-3 py-2 rounded-lg font-medium text-sm transition-colors ${
+                    dashboardView === 'market-intelligence'
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'text-gray-600 hover:text-blue-600'
+                  }`}
+                >
+                  <span className="mr-2">📈</span>
+                  Market Intel
                 </button>
               </div>
             </div>
@@ -211,6 +223,20 @@ const AppContent = () => {
                   <span className="mr-2">👤</span>
                   Profile
                 </button>
+                <button
+                  onClick={() => {
+                    setDashboardView('market-intelligence');
+                    setShowMobileMenu(false);
+                  }}
+                  className={`w-full text-left px-3 py-2 rounded-lg font-medium text-sm transition-colors ${
+                    dashboardView === 'market-intelligence'
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'text-gray-600 hover:text-blue-600'
+                  }`}
+                >
+                  <span className="mr-2">📈</span>
+                  Market Intel
+                </button>
               </div>
             </div>
           )}
@@ -223,6 +249,8 @@ const AppContent = () => {
         <NavHeader />
         {dashboardView === 'profile' ? (
           <Profile userType={user.role} />
+        ) : dashboardView === 'market-intelligence' ? (
+          <MarketIntelligenceDashboard />
         ) : user.role === 'employer' ? (
           <EmployerDashboard onNavigateHome={() => setCurrentView('homepage')} />
         ) : (

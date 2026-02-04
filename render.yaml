@@ -17,3 +17,5 @@ services:
         value: 7d
       - key: PORT
         sync: false
+      - key: SERPER_API_KEY
+        sync: false

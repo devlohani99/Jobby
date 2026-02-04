@@ -125,7 +125,17 @@ const PostJobModal = ({ onClose, onJobCreated }) => {
       onJobCreated();
     } catch (error) {
       console.error('Error creating job:', error);
-      alert('Failed to create job. Please try again.');
+      console.error('Failed job data:', jobData);
+      
+      let errorMessage = 'Failed to create job. Please try again.';
+      
+      if (error.message && error.message.includes('Validation failed')) {
+        errorMessage = 'Please check that all required fields are filled correctly.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      alert(`Error: ${errorMessage}`);
     } finally {
       setLoading(false);
     }

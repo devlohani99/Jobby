@@ -198,7 +198,18 @@ const JobPostingModal = ({ onClose, onJobPosted, isEdit = false, jobData = null 
       resetForm();
     } catch (error) {
       console.error('Job posting error:', error);
-      setError(error.message || 'Failed to post job. Please try again.');
+      console.error('Failed job data:', jobData);
+      
+      let errorMessage = 'Failed to post job. Please try again.';
+      
+      if (error.message && error.message.includes('Validation failed')) {
+        errorMessage = 'Please check that all required fields are filled correctly.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      setError(errorMessage);
+      alert(`Error: ${errorMessage}`);
     } finally {
       setIsSubmitting(false);
     }

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../services/AuthContext';
 
-const SignUp = () => {
+const SignUp = ({ onBackToHome }) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -42,6 +42,17 @@ const SignUp = () => {
   return (
     <div className="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-6">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
+        {onBackToHome && (
+          <button
+            onClick={onBackToHome}
+            className="flex items-center text-gray-600 hover:text-gray-900 mb-6 transition-colors group"
+          >
+            <svg className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+            </svg>
+            <span className="font-medium">Back to Homepage</span>
+          </button>
+        )}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h1>
           <p className="text-gray-600">Join our job portal today</p>

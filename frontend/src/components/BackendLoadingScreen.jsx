@@ -122,12 +122,20 @@ const BackendLoadingScreen = ({ onBackendReady }) => {
 
       <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 max-w-md w-full mx-4 text-center shadow-2xl border border-white/20">
         {/* Logo Section */}
-        <div className="mb-6">
-          <div className="w-16 h-16 mx-auto bg-white rounded-full flex items-center justify-center mb-4 shadow-lg">
-            <span className="text-2xl font-bold text-blue-600">J</span>
+        <div className="mb-8">
+          <div className="flex items-center justify-center mb-6">
+            <div className="relative group">
+              <img 
+                src="/images/jobbylogo.png" 
+                alt="Jobby Logo" 
+                className="h-20 w-20 rounded-2xl shadow-2xl ring-4 ring-white/30 group-hover:ring-blue-300/50 transition-all duration-500" 
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-400/20 rounded-2xl"></div>
+              <div className="absolute -inset-1 bg-gradient-to-r from-blue-400 to-purple-400 rounded-2xl opacity-30 blur-md"></div>
+            </div>
           </div>
-          <h1 className="text-2xl font-bold text-white mb-2">Jobby</h1>
-          <p className="text-blue-100 text-sm">Professional Job Portal</p>
+          <h1 className="text-3xl font-bold text-white mb-2 bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">Jobby</h1>
+          <p className="text-blue-100 text-base">Professional Job Portal</p>
         </div>
 
         {/* Main Spinner */}

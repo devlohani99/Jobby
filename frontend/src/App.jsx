@@ -90,30 +90,40 @@ const AppContent = () => {
   if (isAuthenticated && user) {
     
     const NavHeader = () => (
-      <div className="bg-white shadow-sm border-b sticky top-0 z-50">
+      <div className="bg-white/95 backdrop-blur-md shadow-lg border-b border-blue-100 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-3">
-            <div className="flex items-center space-x-4">
-              <div className="text-blue-600">
-                <h1 className="text-xl font-bold">Jobby</h1>
-                <p className="text-xs text-gray-500">Professional ATS Platform</p>
+          <div className="flex justify-between items-center py-4">
+            <div className="flex items-center space-x-6">
+              <div className="flex items-center space-x-4 group cursor-pointer" onClick={() => setCurrentView('homepage')}>
+                <div className="relative">
+                  <img 
+                    src="/images/jobbylogo.png" 
+                    alt="Jobby Logo" 
+                    className="h-12 w-12 rounded-xl shadow-lg ring-2 ring-blue-100 group-hover:ring-blue-300 transition-all duration-300 group-hover:scale-105" 
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                </div>
+                <div className="">
+                  <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent group-hover:from-blue-700 group-hover:to-purple-700 transition-all duration-300">Jobby</h1>
+                  <p className="text-sm text-gray-500 group-hover:text-blue-600 transition-colors duration-300">Professional Job Portal</p>
+                </div>
               </div>
               
               {/* Desktop Navigation */}
-              <div className="hidden md:flex space-x-4">
+              <div className="hidden md:flex space-x-2 ml-8">
                 <button
                   onClick={() => setCurrentView('homepage')}
-                  className="px-3 py-2 rounded-lg font-medium text-sm transition-colors text-gray-600 hover:text-blue-600 hover:bg-blue-50"
+                  className="px-4 py-2 rounded-xl font-medium text-sm transition-all duration-200 text-gray-600 hover:text-blue-600 hover:bg-blue-50 flex items-center space-x-2 group"
                 >
-                  <span className="mr-2">🏠</span>
-                  Home
+                  <span className="text-lg group-hover:scale-110 transition-transform duration-200">🏠</span>
+                  <span>Home</span>
                 </button>
                 <button
                   onClick={() => setDashboardView('dashboard')}
-                  className={`px-3 py-2 rounded-lg font-medium text-sm transition-colors ${
+                  className={`px-4 py-2 rounded-xl font-medium text-sm transition-all duration-200 flex items-center space-x-2 ${
                     dashboardView === 'dashboard'
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'text-gray-600 hover:text-blue-600'
+                      ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
+                      : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
                   }`}
                 >
                   <span className="mr-2">📊</span>
@@ -358,9 +368,9 @@ const AppContent = () => {
 
         
           {currentView === 'signin' ? (
-            <SignIn onSwitchToSignUp={() => setCurrentView('signup')} onAuthSuccess={handleAuthSuccess} />
+            <SignIn onSwitchToSignUp={() => setCurrentView('signup')} onAuthSuccess={handleAuthSuccess} onBackToHome={() => setCurrentView('homepage')} />
           ) : (
-            <SignUp onSwitchToSignIn={() => setCurrentView('signin')} onAuthSuccess={handleAuthSuccess} />
+            <SignUp onSwitchToSignIn={() => setCurrentView('signin')} onAuthSuccess={handleAuthSuccess} onBackToHome={() => setCurrentView('homepage')} />
           )}
           <Footer />
         </div>

@@ -1,9 +1,16 @@
 const express = require('express');
 const router = express.Router();
+const axios = require('axios');
+
+console.log('📋 Remote jobs route module loaded');
 
 // Simple rate limiting cache
 let lastRequestTime = 0;
 const MIN_REQUEST_INTERVAL = 5000; // 5 seconds between requests (more lenient)
+
+// Cache for API results
+const apiCache = new Map();
+const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
 
 // Mock job data as fallback - comprehensive list with search-aware filtering
 const getMockJobs = (searchQuery = '', locationQuery = '', limit = 20) => {
@@ -216,5 +223,182 @@ const getMockJobs = (searchQuery = '', locationQuery = '', limit = 20) => {
   // Return requested number of jobs
   return filteredJobs.slice(0, Math.min(parseInt(limit), filteredJobs.length));
 };
+
+// Fetch jobs from Remotive API
+const fetchRemotiveJobs = async (searchQuery, limit = 20) => {
+  try {
+    const cacheKey = `remotive_${searchQuery}_${limit}`;
+    const cached = apiCache.get(cacheKey);
+    
+    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+      return cached.data;
+    }
+
+    const url = searchQuery 
+      ? `https://remotive.com/api/remote-jobs?search=${encodeURIComponent(searchQuery)}&limit=${limit}`
+      : `https://remotive.com/api/remote-jobs?limit=${limit}`;
+
+    const response = await axios.get(url, { timeout: 8000 });
+    
+    if (response.data && response.data.jobs) {
+      const jobs = response.data.jobs.map(job => ({
+        id: job.id,
+        title: job.title,
+        company_name: job.company_name,
+        company_logo: job.company_logo || 'https://via.placeholder.com/50',
+        category: job.category,
+        job_type: job.job_type,
+        publication_date: job.publication_date,
+        candidate_required_location: job.candidate_required_location || 'Remote',
+        salary: job.salary || 'Competitive',
+        description: job.description,
+        url: job.url,
+        source: 'Remotive'
+      }));
+
+      apiCache.set(cacheKey, { data: jobs, timestamp: Date.now() });
+      return jobs;
+    }
+    
+    return [];
+  } catch (error) {
+    console.error('Remotive API error:', error.message);
+    return [];
+  }
+};
+
+// Fetch jobs from Serper API
+const fetchSerperJobs = async (searchQuery, location = '', limit = 20) => {
+  try {
+    const apiKey = process.env.SERPER_API_KEY;
+    
+    if (!apiKey) {
+      console.log('Serper API key not configured');
+      return [];
+    }
+
+    const cacheKey = `serper_${searchQuery}_${location}_${limit}`;
+    const cached = apiCache.get(cacheKey);
+    
+    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+      return cached.data;
+    }
+
+    const query = location 
+      ? `${searchQuery} remote jobs in ${location}`
+      : `${searchQuery} remote jobs`;
+
+    const response = await axios.post(
+      'https://google.serper.dev/search',
+      {
+        q: query,
+        num: limit,
+        gl: 'us',
+        hl: 'en'
+      },
+      {
+        headers: {
+          'X-API-KEY': apiKey,
+          'Content-Type': 'application/json'
+        },
+        timeout: 8000
+      }
+    );
+
+    if (response.data && response.data.organic) {
+      const jobs = response.data.organic.map((result, index) => ({
+        id: `serper_${Date.now()}_${index}`,
+        title: result.title,
+        company_name: result.source || 'Company',
+        company_logo: 'https://via.placeholder.com/50',
+        category: 'Remote',
+        job_type: 'Full-time',
+        publication_date: new Date().toISOString(),
+        candidate_required_location: location || 'Remote',
+        salary: 'Competitive',
+        description: result.snippet || '',
+        url: result.link,
+        source: 'Serper'
+      }));
+
+      apiCache.set(cacheKey, { data: jobs, timestamp: Date.now() });
+      return jobs;
+    }
+    
+    return [];
+  } catch (error) {
+    console.error('Serper API error:', error.message);
+    return [];
+  }
+};
+
+// GET /api/remotive-jobs - Search for remote jobs using both APIs
+router.get('/remotive-jobs', async (req, res) => {
+  console.log('🔍 Remote jobs endpoint hit!');
+  try {
+    const { search = '', location = '', limit = 20 } = req.query;
+    
+    console.log(`Job search request: "${search}" in "${location}"`);
+
+    // Fetch from both APIs in parallel
+    const [remotiveJobs, serperJobs] = await Promise.all([
+      fetchRemotiveJobs(search, Math.ceil(limit / 2)),
+      fetchSerperJobs(search, location, Math.ceil(limit / 2))
+    ]);
+
+    // Combine results from both APIs
+    let allJobs = [...remotiveJobs, ...serperJobs];
+
+    // If both APIs fail, use mock data
+    if (allJobs.length === 0) {
+      console.log('Both APIs failed, using mock data');
+      allJobs = getMockJobs(search, location, limit);
+      
+      return res.json({
+        jobs: allJobs,
+        source: 'fallback',
+        message: 'Using sample data'
+      });
+    }
+
+    // Apply location filtering if needed
+    if (location && location.trim()) {
+      const locationLower = location.toLowerCase();
+      allJobs = allJobs.filter(job => 
+        job.candidate_required_location.toLowerCase().includes(locationLower) ||
+        job.candidate_required_location.toLowerCase().includes('remote') ||
+        job.candidate_required_location.toLowerCase().includes('worldwide')
+      );
+    }
+
+    // Limit total results
+    allJobs = allJobs.slice(0, parseInt(limit));
+
+    const sources = [...new Set(allJobs.map(job => job.source))];
+    console.log(`Returning ${allJobs.length} jobs from: ${sources.join(', ')}`);
+
+    res.json({
+      jobs: allJobs,
+      source: sources.join(' + '),
+      count: allJobs.length,
+      message: `Found ${allJobs.length} jobs from ${sources.join(' and ')}`
+    });
+
+  } catch (error) {
+    console.error('Error in job search:', error);
+    
+    // Fallback to mock data on any error
+    const { search = '', location = '', limit = 20 } = req.query;
+    const mockJobs = getMockJobs(search, location, limit);
+    
+    res.json({
+      jobs: mockJobs,
+      source: 'fallback',
+      message: 'Using sample data due to error'
+    });
+  }
+});
+
+console.log('✅ Remote jobs route registered: GET /api/remotive-jobs');
 
 module.exports = router;

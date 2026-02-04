@@ -1,5 +1,4 @@
 import React from 'react';
-
 const Footer = () => {
   return (
     <footer className="bg-gray-900 text-white py-8 mt-auto">
@@ -7,7 +6,14 @@ const Footer = () => {
         <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
           {/* Brand Section */}
           <div className="text-center md:text-left">
-            <h3 className="text-xl font-bold text-blue-400">Jobby</h3>
+            <div className="flex items-center justify-center md:justify-start mb-2">
+              <img 
+                src="/images/jobbylogo.png" 
+                alt="Jobby Logo" 
+                className="h-10 w-10 mr-3 rounded-lg shadow-lg ring-2 ring-blue-400/30" 
+              />
+              <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Jobby</h3>
+            </div>
             <p className="text-gray-400 text-sm mt-1">Professional Job Portal Platform</p>
           </div>
 

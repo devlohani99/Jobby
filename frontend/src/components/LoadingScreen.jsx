@@ -6,10 +6,17 @@ const LoadingScreen = ({ message = "Loading..." }) => {
       <div className="bg-white p-8 rounded-2xl shadow-xl max-w-sm w-full mx-4">
         {/* Logo */}
         <div className="text-center mb-6">
-          <div className="w-16 h-16 bg-blue-600 rounded-full mx-auto mb-4 flex items-center justify-center">
-            <span className="text-2xl font-bold text-white">J</span>
+          <div className="flex justify-center mb-4">
+            <div className="relative group">
+              <img 
+                src="/images/jobbylogo.png" 
+                alt="Jobby Logo" 
+                className="h-16 w-16 rounded-xl shadow-xl ring-2 ring-blue-200 group-hover:ring-blue-400 transition-all duration-300" 
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl"></div>
+            </div>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Jobby</h1>
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-blue-900 bg-clip-text text-transparent">Jobby</h1>
           <p className="text-sm text-gray-500">Job Portal Platform</p>
         </div>
 

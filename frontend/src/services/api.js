@@ -20,6 +20,11 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response.data,
   (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/';
+    }
     const message = error.response?.data?.message || error.message || 'Request failed';
     throw new Error(message);
   }
@@ -37,6 +42,42 @@ const authAPI = {
   logout: async () => {
     return api.post('/auth/logout');
   },
+};
+
+const jobAPI = {
+  getAllJobs: (params) => api.get('/jobs', { params }),
+  getJobById: (id) => api.get(`/jobs/${id}`),
+  
+  createJob: (jobData) => api.post('/jobs', jobData),
+  updateJob: (id, jobData) => api.put(`/jobs/${id}`, jobData),
+  deleteJob: (id) => api.delete(`/jobs/${id}`),
+  getMyJobs: (params) => api.get('/jobs/employer/my-jobs', { params }),
+  getJobStats: () => api.get('/jobs/employer/stats'),
+};
+
+const applicationAPI = {
+  applyForJob: (jobId, applicationData) => {
+    const formData = new FormData();
+    Object.keys(applicationData).forEach(key => {
+      if (key === 'resume' && applicationData[key]) {
+        formData.append('resume', applicationData[key]);
+      } else {
+        formData.append(key, applicationData[key]);
+      }
+    });
+    return api.post(`/applications/apply/${jobId}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
+  getMyApplications: (params) => api.get('/applications/my-applications', { params }),
+  withdrawApplication: (id) => api.patch(`/applications/withdraw/${id}`),
+  
+  getJobApplications: (jobId, params) => api.get(`/applications/job/${jobId}`, { params }),
+  getEmployerApplications: (params) => api.get('/applications/employer', { params }),
+  updateApplicationStatus: (id, statusData) => api.patch(`/applications/status/${id}`, statusData),
+  getApplicationStats: (jobId) => api.get(`/applications/stats/${jobId}`),
+  
+  getApplicationById: (id) => api.get(`/applications/${id}`),
 };
 
 const tokenManager = {
@@ -58,4 +99,4 @@ const tokenManager = {
   },
 };
 
-export { authAPI, tokenManager };
+export { authAPI, jobAPI, applicationAPI, tokenManager };

@@ -10,7 +10,7 @@ const LoadingScreen = ({ message = "Loading..." }) => {
             <span className="text-2xl font-bold text-white">J</span>
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Jobby</h1>
-          <p className="text-sm text-gray-500">Professional ATS Platform</p>
+          <p className="text-sm text-gray-500">Job Portal Platform</p>
         </div>
 
         {/* Loading Animation */}

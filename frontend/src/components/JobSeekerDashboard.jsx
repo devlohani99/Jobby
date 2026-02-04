@@ -340,7 +340,7 @@ const JobSeekerDashboard = ({ onNavigateHome }) => {
                   <h2 className="text-2xl font-bold bg-linear-to-r from-white to-blue-100 bg-clip-text text-transparent group-hover:from-purple-200 group-hover:to-pink-200 transition-all duration-300">
                     Jobby
                   </h2>
-                  <p className="text-blue-100 text-sm group-hover:text-purple-200 transition-colors duration-300">Professional ATS Platform</p>
+                  <p className="text-blue-100 text-sm group-hover:text-purple-200 transition-colors duration-300">Job Portal Platform</p>
                 </div>
               </button>
               

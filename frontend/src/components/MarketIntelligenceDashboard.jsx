@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import marketIntelligenceAPI from '../services/marketIntelligenceAPI';
+import Footer from './Footer';
 
 const MarketIntelligenceDashboard = ({ jobTitle = 'Software Engineer', location = 'United States' }) => {
   const [marketData, setMarketData] = useState(null);
@@ -83,7 +84,8 @@ const MarketIntelligenceDashboard = ({ jobTitle = 'Software Engineer', location 
   );
 
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-6">
+    <div>
+      <div className="max-w-7xl mx-auto p-6 space-y-6">
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl text-white p-6">
         <div className="flex items-center space-x-3 mb-4">
@@ -305,6 +307,8 @@ const MarketIntelligenceDashboard = ({ jobTitle = 'Software Engineer', location 
           </div>
         </div>
       )}
+      </div>
+      <Footer />
     </div>
   );
 };

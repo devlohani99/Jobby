@@ -9,6 +9,7 @@ import EmployerDashboard from './components/EmployerDashboard';
 import Profile from './components/Profile';
 import MarketIntelligenceDashboard from './components/MarketIntelligenceDashboard';
 import LoadingScreen from './components/LoadingScreen';
+import Footer from './components/Footer';
 import Homepage from './components/Homepage';
 
 const AppContent = () => {
@@ -259,6 +260,7 @@ const AppContent = () => {
         
         {/* Notification Panel */}
         
+        <Footer />
       </div>
     );
   }
@@ -266,11 +268,14 @@ const AppContent = () => {
   return (
     <div>
       {currentView === 'homepage' ? (
-        <Homepage 
-          onSignIn={() => setCurrentView('signin')}
-          onSignUp={() => setCurrentView('signup')}
-          onPostJob={() => setCurrentView('signup')}
-        />
+        <div>
+          <Homepage 
+            onSignIn={() => setCurrentView('signin')}
+            onSignUp={() => setCurrentView('signup')}
+            onPostJob={() => setCurrentView('signup')}
+          />
+          <Footer />
+        </div>
       ) : (
         <div className="min-h-screen relative">
           {/* Top Navigation Bar */}
@@ -318,6 +323,7 @@ const AppContent = () => {
           ) : (
             <SignUp onSwitchToSignIn={() => setCurrentView('signin')} />
           )}
+          <Footer />
         </div>
       )}
     </div>

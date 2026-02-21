@@ -16,12 +16,15 @@ const CURRENCY_TO_INR = {
   JPY: 0.55,
 };
 
+const PUBLIC_JOB_API_URL = 'https://www.arbeitnow.com/api/job-board-api';
+const MIN_LISTINGS_TARGET = 25;
+const MAX_PUBLIC_API_PAGES = 6;
+
 class SerperService {
   constructor() {
     this.apiKey = process.env.SERPER_API_KEY;
     this.baseURL = 'https://google.serper.dev';
-    this.jsearchHost = process.env.JSEARCH_RAPIDAPI_HOST || 'jsearch.p.rapidapi.com';
-    this.jsearchKey = process.env.JSEARCH_RAPIDAPI_KEY || process.env.RAPIDAPI_KEY;
+    this.publicJobApi = PUBLIC_JOB_API_URL;
   }
 
   async search(query, options = {}) {
@@ -52,31 +55,43 @@ class SerperService {
   }
 
   async fetchJobListings(jobTitle, location) {
-    const response = await axios.get(`https://${this.jsearchHost}/search`, {
-      params: {
-        query: `${jobTitle} in ${location}`,
-        page: '1',
-        num_pages: '1',
-      },
-      headers: {
-        'X-RapidAPI-Key': this.jsearchKey,
-        'X-RapidAPI-Host': this.jsearchHost,
-      },
-    });
-    return response.data;
+    const normalizedTitle = jobTitle.toLowerCase();
+    const normalizedLocation = location.toLowerCase();
+    const listings = [];
+    let page = 1;
+    let hasMore = true;
+
+    while (listings.length < MIN_LISTINGS_TARGET && hasMore && page <= MAX_PUBLIC_API_PAGES) {
+      const { data } = await axios.get(`${this.publicJobApi}?page=${page}`);
+      const jobs = data?.data || [];
+
+      jobs.forEach((job) => {
+        const jobTitleText = job.title?.toLowerCase() || '';
+        const jobLocationText = job.location?.toLowerCase() || '';
+        const matchesTitle = jobTitleText.includes(normalizedTitle);
+        const remoteLocationMatch = job.remote && ['remote', 'anywhere', 'global'].some((keyword) => normalizedLocation.includes(keyword));
+        const matchesLocation = normalizedLocation
+          ? jobLocationText.includes(normalizedLocation) || remoteLocationMatch
+          : true;
+
+        if (matchesTitle && matchesLocation) {
+          listings.push(this.normalizePublicJob(job));
+        }
+      });
+
+      hasMore = Boolean(data?.links?.next);
+      page += 1;
+    }
+
+    return listings;
   }
 
   async tryFetchListings(jobTitle, location) {
-    if (!this.jsearchKey) {
-      console.warn('JSearch RapidAPI key is missing. Skipping live listing fetch.');
-      return null;
-    }
-
     try {
-      const response = await this.fetchJobListings(jobTitle, location);
-      return response.data || [];
+      const listings = await this.fetchJobListings(jobTitle, location);
+      return listings.length ? listings : null;
     } catch (error) {
-      console.error('JSearch API Error:', error.message);
+      console.error('Public job API error:', error.message);
       return null;
     }
   }
@@ -140,7 +155,7 @@ class SerperService {
     const figures = [];
 
     listings.forEach((listing) => {
-      const currency = (listing.job_salary_currency || 'USD').toUpperCase();
+      const currency = (listing.job_salary_currency || 'INR').toUpperCase();
       const period = (listing.job_salary_period || 'year').toLowerCase();
       const minValue = this.convertSalaryFigure(listing.job_min_salary, period, currency);
       const maxValue = this.convertSalaryFigure(listing.job_max_salary, period, currency);
@@ -273,7 +288,7 @@ class SerperService {
 
     const remoteCount = listings.filter((listing) => listing.job_is_remote === true).length;
     const hybridCount = listings.filter(
-      (listing) => listing.job_is_remote === 'Hybrid' || listing.job_employment_type === 'Hybrid'
+      (listing) => listing.job_employment_type?.toLowerCase() === 'hybrid'
     ).length;
 
     const remotePercentage = Math.round((remoteCount / total) * 100);
@@ -518,6 +533,74 @@ class SerperService {
     if (positiveCount > negativeCount) return 'increasing';
     if (negativeCount > positiveCount) return 'decreasing';
     return 'stable';
+  }
+
+  normalizePublicJob(job) {
+    const { minSalary, maxSalary, currency } = this.parseSalary(job.salary);
+    const { city, country } = this.splitLocation(job.location);
+
+    return {
+      job_title: job.title,
+      employer_name: job.company_name,
+      job_city: city,
+      job_country: country,
+      job_salary_currency: currency,
+      job_min_salary: minSalary,
+      job_max_salary: maxSalary,
+      job_salary_period: 'year',
+      job_is_remote: Boolean(job.remote),
+      job_employment_type: job.job_types?.[0] || null,
+      job_posted_at_datetime_utc: job.created_at ? new Date(job.created_at).toISOString() : null,
+      job_required_skills: job.tags || [],
+      job_highlights: {
+        Responsibilities: job.tags || [],
+        Benefits: job.job_types || [],
+      },
+    };
+  }
+
+  parseSalary(salaryText) {
+    if (!salaryText) {
+      return { minSalary: null, maxSalary: null, currency: 'INR' };
+    }
+
+    const currency = this.detectCurrency(salaryText);
+    const matches = [...salaryText.matchAll(/(\d+(?:\.\d+)?)([kKmM]?)/g)].map((match) => {
+      const value = parseFloat(match[1]);
+      const magnitude = match[2]?.toLowerCase();
+      if (Number.isNaN(value)) return null;
+      if (magnitude === 'm') return value * 1_000_000;
+      if (magnitude === 'k') return value * 1_000;
+      return value;
+    }).filter(Boolean);
+
+    if (!matches.length) {
+      return { minSalary: null, maxSalary: null, currency };
+    }
+
+    const minSalary = Math.min(...matches);
+    const maxSalary = Math.max(...matches);
+
+    return { minSalary, maxSalary, currency };
+  }
+
+  detectCurrency(text = '') {
+    if (text.includes('₹') || /inr/i.test(text)) return 'INR';
+    if (text.includes('$')) return 'USD';
+    if (text.includes('€')) return 'EUR';
+    if (text.includes('£')) return 'GBP';
+    return 'INR';
+  }
+
+  splitLocation(locationText = '') {
+    if (!locationText) return { city: null, country: null };
+    const parts = locationText.split(',').map((part) => part.trim()).filter(Boolean);
+    if (parts.length === 0) return { city: null, country: null };
+    if (parts.length === 1) return { city: parts[0], country: null };
+    return {
+      city: parts[0],
+      country: parts[parts.length - 1],
+    };
   }
 }
 

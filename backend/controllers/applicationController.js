@@ -63,10 +63,10 @@ exports.applyForJob = async (req, res) => {
     const application = new Application(applicationData);
     await application.save();
 
-    // Increment job application count
+
     await Job.findByIdAndUpdate(jobId, { $inc: { applicationsCount: 1 } });
 
-    // Populate job details for response
+
     await application.populate('job', 'title company');
 
     res.status(201).json({
@@ -77,7 +77,7 @@ exports.applyForJob = async (req, res) => {
   } catch (error) {
     console.error('Error applying for job:', error);
     
-    // Clean up uploaded file if error occurs
+
     if (req.file) {
       try {
         await fs.unlink(req.file.path);
@@ -93,7 +93,7 @@ exports.applyForJob = async (req, res) => {
   }
 };
 
-// Get applications for a specific job (Employers only)
+
 exports.getJobApplications = async (req, res) => {
   try {
     const { jobId } = req.params;
@@ -105,7 +105,7 @@ exports.getJobApplications = async (req, res) => {
       sortOrder = 'desc'
     } = req.query;
 
-    // Verify job exists and user owns it
+
     const job = await Job.findById(jobId);
     if (!job) {
       return res.status(404).json({
@@ -160,7 +160,7 @@ exports.getJobApplications = async (req, res) => {
   }
 };
 
-// Get user's applications (Job seekers only)
+
 exports.getMyApplications = async (req, res) => {
   try {
     const {
@@ -210,7 +210,7 @@ exports.getMyApplications = async (req, res) => {
   }
 };
 
-// Update application status (Employers only)
+
 exports.updateApplicationStatus = async (req, res) => {
   try {
     const { applicationId } = req.params;
@@ -226,7 +226,7 @@ exports.updateApplicationStatus = async (req, res) => {
       });
     }
 
-    // Check if user owns the job
+
     if (application.job.postedBy.toString() !== req.user.id) {
       return res.status(403).json({
         success: false,
@@ -234,7 +234,7 @@ exports.updateApplicationStatus = async (req, res) => {
       });
     }
 
-    // Update status
+  
     if (status) {
       application.status = status;
       application.timeline.push({

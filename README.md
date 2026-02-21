@@ -95,12 +95,10 @@ jobby/
    JWT_SECRET=your_jwt_secret_key
    PORT=5000
    SERPER_API_KEY=serper_google_search_api_key
-   JSEARCH_RAPIDAPI_KEY=rapidapi_key_with_jsearch_access
-   JSEARCH_RAPIDAPI_HOST=jsearch.p.rapidapi.com
    ```
 
-   - `SERPER_API_KEY` powers the quick stats/trending skills endpoints and acts as a fallback when live listings are unavailable.
-   - `JSEARCH_RAPIDAPI_KEY` enables real-time market intelligence by querying RapidAPI's JSearch dataset; without it the dashboard drops back to heuristic data.
+   - `SERPER_API_KEY` powers the quick stats/trending skills endpoints and provides a fallback when live listings are unavailable.
+   - Real-time market intelligence now relies on the public Arbeitnow Job Board API, which is free and requires no credentials.
 
 4. Start the server:
    ```bash

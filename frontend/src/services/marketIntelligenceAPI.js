@@ -23,6 +23,9 @@ export const marketIntelligenceAPI = {
   getMarketIntelligence: async (jobTitle, location) => {
     try {
       const response = await api.get(`/market-intelligence/${encodeURIComponent(jobTitle)}/${encodeURIComponent(location)}`);
+      if (response.data?.success) {
+        return response.data.data;
+      }
       return response.data;
     } catch (error) {
       console.error('Market Intelligence API Error:', error);

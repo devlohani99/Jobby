@@ -35,10 +35,14 @@ const JobApplicationModal = ({ job, isOpen, onClose, onApplicationSuccess }) => 
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-      {/* Blur background overlay */}
-      <div className="absolute inset-0 backdrop-blur-md" onClick={onClose}></div>
-      <div className="bg-white rounded-xl max-w-md w-full">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Dim background overlay */}
+      <div
+        className="absolute inset-0 z-0 bg-black/40"
+        onClick={onClose}
+        aria-hidden="true"
+      ></div>
+      <div className="relative z-10 w-full max-w-md rounded-xl bg-white">
         {/* Header */}
         <div className="border-b border-gray-200 px-6 py-4 rounded-t-xl">
           <div className="flex justify-between items-start">

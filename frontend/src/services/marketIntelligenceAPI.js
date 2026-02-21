@@ -31,7 +31,7 @@ export const marketIntelligenceAPI = {
   },
 
   // Get quick market stats
-  getMarketStats: async (jobTitle, location = 'United States') => {
+  getMarketStats: async (jobTitle, location = 'India') => {
     try {
       const response = await api.get(`/market-stats/${encodeURIComponent(jobTitle)}`, {
         params: { location }
@@ -44,7 +44,7 @@ export const marketIntelligenceAPI = {
   },
 
   // Get trending skills for a job title
-  getTrendingSkills: async (jobTitle, location = 'United States') => {
+  getTrendingSkills: async (jobTitle, location = 'India') => {
     try {
       const response = await api.get(`/trending-skills/${encodeURIComponent(jobTitle)}`, {
         params: { location }

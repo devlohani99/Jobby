@@ -4,13 +4,13 @@ const mongoose = require('mongoose');
 const path = require('path');
 const fs = require('fs').promises;
 
-// Apply for a job (Job seekers only)
+
 exports.applyForJob = async (req, res) => {
   try {
     const { jobId } = req.params;
     const { coverLetter, salaryExpectation, profileData } = req.body;
 
-    // Check if this is a remote job (should not be applied for through our system)
+
     if (jobId.startsWith('remote_')) {
       return res.status(400).json({
         success: false,
@@ -18,7 +18,7 @@ exports.applyForJob = async (req, res) => {
       });
     }
 
-    // Check if job exists and is active
+
     const job = await Job.findById(jobId);
     if (!job || !job.isActive) {
       return res.status(404).json({
@@ -27,7 +27,7 @@ exports.applyForJob = async (req, res) => {
       });
     }
 
-    // Check if user already applied
+   
     const existingApplication = await Application.findOne({
       job: jobId,
       applicant: req.user.id

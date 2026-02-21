@@ -94,7 +94,13 @@ jobby/
    MONGO_URL=your_mongodb_connection_string
    JWT_SECRET=your_jwt_secret_key
    PORT=5000
+   SERPER_API_KEY=serper_google_search_api_key
+   JSEARCH_RAPIDAPI_KEY=rapidapi_key_with_jsearch_access
+   JSEARCH_RAPIDAPI_HOST=jsearch.p.rapidapi.com
    ```
+
+   - `SERPER_API_KEY` powers the quick stats/trending skills endpoints and acts as a fallback when live listings are unavailable.
+   - `JSEARCH_RAPIDAPI_KEY` enables real-time market intelligence by querying RapidAPI's JSearch dataset; without it the dashboard drops back to heuristic data.
 
 4. Start the server:
    ```bash

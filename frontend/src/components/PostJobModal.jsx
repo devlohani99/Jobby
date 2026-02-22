@@ -4,78 +4,60 @@ import { jobAPI } from '../services/api';
 const PostJobModal = ({ onClose, onJobCreated }) => {
   const [formData, setFormData] = useState({
     title: '',
-    description: '',
     company: '',
-    location: {
-      city: '',
-      state: '',
-      country: 'India',
-      remote: false
-    },
-    salary: {
-      min: '',
-      max: '',
-      currency: 'INR'
-    },
-    experience: {
-      min: '',
-      max: ''
-    },
-    skills: '',
-    employmentType: 'full-time',
+    salaryInput: '',
+    location: '',
     jobType: 'on-site',
-    category: 'software-development',
-    requirements: '',
-    benefits: '',
-    deadline: ''
+    description: ''
   });
 
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    
-    if (name.includes('.')) {
-      const [parent, child] = name.split('.');
-      setFormData(prev => ({
-        ...prev,
-        [parent]: {
-          ...prev[parent],
-          [child]: type === 'checkbox' ? checked : value
-        }
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: type === 'checkbox' ? checked : value
-      }));
-    }
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   const validateForm = () => {
     const newErrors = {};
 
     if (!formData.title.trim()) newErrors.title = 'Job title is required';
-    if (!formData.description.trim()) newErrors.description = 'Job description is required';
     if (!formData.company.trim()) newErrors.company = 'Company name is required';
-    if (!formData.location.city.trim()) newErrors['location.city'] = 'City is required';
-    if (!formData.location.state.trim()) newErrors['location.state'] = 'State is required';
-
-    if (formData.salary.min && formData.salary.max) {
-      if (Number(formData.salary.min) >= Number(formData.salary.max)) {
-        newErrors['salary.max'] = 'Maximum salary should be greater than minimum salary';
-      }
-    }
-
-    if (formData.experience.min && formData.experience.max) {
-      if (Number(formData.experience.min) > Number(formData.experience.max)) {
-        newErrors['experience.max'] = 'Maximum experience should be greater than minimum experience';
-      }
-    }
+    if (!formData.salaryInput.trim()) newErrors.salaryInput = 'Salary is required';
+    if (!formData.location.trim()) newErrors.location = 'Location is required';
+    if (!formData.jobType) newErrors.jobType = 'Job type is required';
+    if (!formData.description.trim()) newErrors.description = 'Job description is required';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+
+  const parseSalaryInput = (input) => {
+    if (!input) {
+      return { min: 0, max: 0 };
+    }
+
+    const numbers = input
+      .split(/[^0-9]+/)
+      .filter(Boolean)
+      .map(num => Number(num));
+
+    if (numbers.length === 0) {
+      return { min: 0, max: 0 };
+    }
+
+    if (numbers.length === 1) {
+      return { min: numbers[0], max: numbers[0] };
+    }
+
+    const min = Math.min(...numbers);
+    const max = Math.max(...numbers);
+    return { min, max };
   };
 
   const handleSubmit = async (e) => {
@@ -84,48 +66,50 @@ const PostJobModal = ({ onClose, onJobCreated }) => {
     if (!validateForm()) return;
 
     setLoading(true);
+    let jobPayload;
 
     try {
-      // Auto-fill empty optional fields with "N/A"
-      const autoFilledFormData = {
-        ...formData,
-        skills: formData.skills.trim() || 'N/A',
-        benefits: formData.benefits.trim() || 'N/A',
-        deadline: formData.deadline || null,
+      const { min, max } = parseSalaryInput(formData.salaryInput);
+      const [cityInput, stateInput] = formData.location.split(',').map(part => part.trim()).filter(Boolean);
+      const city = cityInput || formData.location.trim();
+      const state = stateInput || city;
+
+      jobPayload = {
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        company: formData.company.trim(),
+        location: {
+          city,
+          state,
+          country: 'India',
+          remote: formData.jobType !== 'on-site'
+        },
         salary: {
-          ...formData.salary,
-          min: formData.salary.min || 0,
-          max: formData.salary.max || 0
+          min,
+          max,
+          currency: 'INR'
         },
         experience: {
-          min: formData.experience.min || 0,
-          max: formData.experience.max || 10
-        }
+          min: 0,
+          max: 0
+        },
+        skills: [],
+        employmentType: 'full-time',
+        jobType: formData.jobType,
+        category: 'other',
+        requirements: ['N/A'],
+        benefits: ['N/A'],
+        deadline: null
       };
 
-      // Process the form data
-      const jobData = {
-        ...autoFilledFormData,
-        skills: autoFilledFormData.skills === 'N/A' ? [] : autoFilledFormData.skills.split(',').map(skill => skill.trim()),
-        requirements: formData.requirements ? formData.requirements.split('\n').filter(req => req.trim()) : ['N/A'],
-        benefits: autoFilledFormData.benefits === 'N/A' ? ['N/A'] : autoFilledFormData.benefits.split('\n').filter(benefit => benefit.trim()),
-        salary: {
-          ...autoFilledFormData.salary,
-          min: autoFilledFormData.salary.min ? Number(autoFilledFormData.salary.min) : 0,
-          max: autoFilledFormData.salary.max ? Number(autoFilledFormData.salary.max) : 0
-        },
-        experience: {
-          min: formData.experience.min ? Number(formData.experience.min) : 0,
-          max: formData.experience.max ? Number(formData.experience.max) : undefined
-        },
-        deadline: formData.deadline ? new Date(formData.deadline) : undefined
-      };
-
-      await jobAPI.createJob(jobData);
+      await jobAPI.createJob(jobPayload);
       onJobCreated();
+      onClose?.();
     } catch (error) {
       console.error('Error creating job:', error);
-      console.error('Failed job data:', jobData);
+      if (jobPayload) {
+        console.error('Failed job data:', jobPayload);
+      }
       
       let errorMessage = 'Failed to create job. Please try again.';
       
@@ -143,8 +127,7 @@ const PostJobModal = ({ onClose, onJobCreated }) => {
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-      {/* Blur background overlay */}
-      <div className="absolute inset-0 backdrop-blur-md" onClick={onClose}></div>
+      <div className="absolute inset-0 bg-black/40" onClick={onClose}></div>
       <div className="relative bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           {/* Header */}
@@ -161,12 +144,11 @@ const PostJobModal = ({ onClose, onJobCreated }) => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Basic Information */}
+            <p className="text-sm text-gray-500">Share only the essentials. Everything else will be auto-filled for you.</p>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Job Title *
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Job Title *</label>
                 <input
                   type="text"
                   name="title"
@@ -175,15 +157,13 @@ const PostJobModal = ({ onClose, onJobCreated }) => {
                   className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                     errors.title ? 'border-red-300' : 'border-gray-300'
                   }`}
-                  placeholder="e.g., Senior Frontend Developer"
+                  placeholder="e.g., Frontend Developer"
                 />
                 {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title}</p>}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Company Name *
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Company *</label>
                 <input
                   type="text"
                   name="company"
@@ -196,215 +176,58 @@ const PostJobModal = ({ onClose, onJobCreated }) => {
                 />
                 {errors.company && <p className="mt-1 text-sm text-red-600">{errors.company}</p>}
               </div>
-            </div>
 
-            {/* Location */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Location
-              </label>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <input
-                    type="text"
-                    name="location.city"
-                    value={formData.location.city}
-                    onChange={handleChange}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors['location.city'] ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                    placeholder="City *"
-                  />
-                  {errors['location.city'] && <p className="mt-1 text-sm text-red-600">{errors['location.city']}</p>}
-                </div>
-                <div>
-                  <input
-                    type="text"
-                    name="location.state"
-                    value={formData.location.state}
-                    onChange={handleChange}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors['location.state'] ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                    placeholder="State *"
-                  />
-                  {errors['location.state'] && <p className="mt-1 text-sm text-red-600">{errors['location.state']}</p>}
-                </div>
-                <div>
-                  <select
-                    name="location.country"
-                    value={formData.location.country}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="India">India</option>
-                    <option value="USA">USA</option>
-                    <option value="Canada">Canada</option>
-                    <option value="UK">UK</option>
-                  </select>
-                </div>
-              </div>
-              <div className="mt-2">
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="location.remote"
-                    checked={formData.location.remote}
-                    onChange={handleChange}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Remote work available</span>
-                </label>
-              </div>
-            </div>
-
-            {/* Job Type & Employment Type */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Employment Type
-                </label>
-                <select
-                  name="employmentType"
-                  value={formData.employmentType}
+                <label className="block text-sm font-medium text-gray-700 mb-2">Salary *</label>
+                <input
+                  type="text"
+                  name="salaryInput"
+                  value={formData.salaryInput}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="full-time">Full Time</option>
-                  <option value="part-time">Part Time</option>
-                  <option value="contract">Contract</option>
-                  <option value="internship">Internship</option>
-                  <option value="freelance">Freelance</option>
-                </select>
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    errors.salaryInput ? 'border-red-300' : 'border-gray-300'
+                  }`}
+                  placeholder="e.g., 10-15 LPA"
+                />
+                <p className="text-xs text-gray-500 mt-1">Numbers only. Use range or single value.</p>
+                {errors.salaryInput && <p className="mt-1 text-sm text-red-600">{errors.salaryInput}</p>}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Work Type
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Location *</label>
+                <input
+                  type="text"
+                  name="location"
+                  value={formData.location}
+                  onChange={handleChange}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    errors.location ? 'border-red-300' : 'border-gray-300'
+                  }`}
+                  placeholder="City, State"
+                />
+                {errors.location && <p className="mt-1 text-sm text-red-600">{errors.location}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Job Type *</label>
                 <select
                   name="jobType"
                   value={formData.jobType}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    errors.jobType ? 'border-red-300' : 'border-gray-300'
+                  }`}
                 >
                   <option value="on-site">On-site</option>
                   <option value="remote">Remote</option>
                   <option value="hybrid">Hybrid</option>
                 </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Category
-                </label>
-                <select
-                  name="category"
-                  value={formData.category}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="software-development">Software Development</option>
-                  <option value="data-science">Data Science</option>
-                  <option value="design">Design</option>
-                  <option value="marketing">Marketing</option>
-                  <option value="sales">Sales</option>
-                  <option value="finance">Finance</option>
-                  <option value="hr">Human Resources</option>
-                  <option value="operations">Operations</option>
-                  <option value="other">Other</option>
-                </select>
+                {errors.jobType && <p className="mt-1 text-sm text-red-600">{errors.jobType}</p>}
               </div>
             </div>
 
-            {/* Salary & Experience */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Salary Range (Annual)
-                </label>
-                <div className="grid grid-cols-3 gap-2">
-                  <input
-                    type="number"
-                    name="salary.min"
-                    value={formData.salary.min}
-                    onChange={handleChange}
-                    placeholder="Min"
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                  <input
-                    type="number"
-                    name="salary.max"
-                    value={formData.salary.max}
-                    onChange={handleChange}
-                    placeholder="Max"
-                    className={`px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors['salary.max'] ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                  />
-                  <select
-                    name="salary.currency"
-                    value={formData.salary.currency}
-                    onChange={handleChange}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="INR">INR</option>
-                    <option value="USD">USD</option>
-                    <option value="EUR">EUR</option>
-                  </select>
-                </div>
-                {errors['salary.max'] && <p className="mt-1 text-sm text-red-600">{errors['salary.max']}</p>}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Experience (Years)
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  <input
-                    type="number"
-                    name="experience.min"
-                    value={formData.experience.min}
-                    onChange={handleChange}
-                    placeholder="Min (0)"
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                  <input
-                    type="number"
-                    name="experience.max"
-                    value={formData.experience.max}
-                    onChange={handleChange}
-                    placeholder="Max"
-                    className={`px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors['experience.max'] ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                  />
-                </div>
-                {errors['experience.max'] && <p className="mt-1 text-sm text-red-600">{errors['experience.max']}</p>}
-              </div>
-            </div>
-
-            {/* Skills */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Required Skills
-              </label>
-              <input
-                type="text"
-                name="skills"
-                value={formData.skills}
-                onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="e.g., React, Node.js, MongoDB (comma-separated)"
-              />
-              <p className="mt-1 text-sm text-gray-500">Separate skills with commas</p>
-            </div>
-
-            {/* Description */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Job Description *
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Job Description *</label>
               <textarea
                 name="description"
                 value={formData.description}
@@ -413,61 +236,12 @@ const PostJobModal = ({ onClose, onJobCreated }) => {
                 className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                   errors.description ? 'border-red-300' : 'border-gray-300'
                 }`}
-                placeholder="Describe the role, responsibilities, and what you're looking for in a candidate..."
+                placeholder="Describe the role and what makes this opportunity special"
               />
               {errors.description && <p className="mt-1 text-sm text-red-600">{errors.description}</p>}
             </div>
 
-            {/* Requirements & Benefits */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Requirements
-                </label>
-                <textarea
-                  name="requirements"
-                  value={formData.requirements}
-                  onChange={handleChange}
-                  rows={4}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="List key requirements (one per line)"
-                />
-                <p className="mt-1 text-sm text-gray-500">One requirement per line</p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Benefits
-                </label>
-                <textarea
-                  name="benefits"
-                  value={formData.benefits}
-                  onChange={handleChange}
-                  rows={4}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="List benefits and perks (one per line)"
-                />
-                <p className="mt-1 text-sm text-gray-500">One benefit per line</p>
-              </div>
-            </div>
-
-            {/* Application Deadline */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Application Deadline (Optional)
-              </label>
-              <input
-                type="date"
-                name="deadline"
-                value={formData.deadline}
-                onChange={handleChange}
-                className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                min={new Date().toISOString().split('T')[0]}
-              />
-            </div>
-
-            {/* Form Actions */}
-            <div className="flex gap-4 pt-6">
+            <div className="flex gap-4 pt-2">
               <button
                 type="button"
                 onClick={onClose}

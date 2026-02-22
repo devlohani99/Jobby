@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import Footer from './Footer';
 import marketIntelligenceAPI from '../services/marketIntelligenceAPI';
 
 const DEFAULT_JOB_TITLE = 'Software Engineer';
@@ -330,7 +329,6 @@ const MarketIntelligenceDashboard = () => {
           )}
         </div>
       </div>
-      <Footer />
     </div>
   );
 };

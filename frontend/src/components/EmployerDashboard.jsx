@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { jobAPI, applicationAPI } from '../services/api';
 import JobPostingModal from './JobPostingModal';
 import ApplicationsModal from './ApplicationsModal';
-import MarketIntelligenceDashboard from './MarketIntelligenceDashboard';
 
 // Add custom styles for animations
 const styles = `
@@ -80,7 +79,7 @@ const EmployerDashboard = ({ onNavigateHome }) => {
         responseRate: 0
       });
       
-      const fetchedJobs = jobsResponse.jobs || [];
+      const fetchedJobs = (jobsResponse.jobs || []).filter((job) => job.isActive !== false);
       setJobs(fetchedJobs);
       
     } catch (error) {
@@ -159,32 +158,22 @@ const EmployerDashboard = ({ onNavigateHome }) => {
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-50 via-indigo-50 to-purple-100">
-      {/* Enhanced Header */}
-      <div className="bg-linear-to-r from-indigo-600 via-purple-600 to-pink-600 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="flex justify-between items-center">
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+          <div className="flex flex-wrap items-center justify-between gap-6">
             <div>
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0H8m8 0v2a2 2 0 002 2M8 6v2a2 2 0 002 2m0 0h4m-4 0a2 2 0 00-2 2v4a2 2 0 002 2h4a2 2 0 002-2v-4a2 2 0 00-2-2" />
-                  </svg>
-                </div>
-                <div>
-                  <h1 className="text-4xl font-bold bg-linear-to-r from-white to-purple-100 bg-clip-text">
-                    Employer Dashboard
-                  </h1>
-                  <p className="text-purple-100 text-lg mt-2">Manage your job postings and find the perfect candidates</p>
-                </div>
-              </div>
+              <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">Employer Dashboard</p>
+              <h1 className="text-3xl font-semibold text-gray-900 mt-2">Manage postings and track applications</h1>
+              <p className="text-gray-500 mt-1">Everything you need to hire in one clean view.</p>
             </div>
             <button
               onClick={() => setShowPostModal(true)}
-              className="group bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 border border-white/20 flex items-center gap-3 hover:scale-105 shadow-xl"
+              className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 text-white font-medium shadow-sm hover:bg-indigo-700 transition"
             >
-              <svg className="w-6 h-6 group-hover:rotate-180 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v12m6-6H6" />
               </svg>
               <span>Post New Job</span>
             </button>
@@ -193,23 +182,21 @@ const EmployerDashboard = ({ onNavigateHome }) => {
       </div>
 
       {/* Modern Navigation Tabs */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 relative z-10">
-        <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 p-2">
-          <nav className="flex">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-10">
+        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-1">
+          <nav className="flex gap-2">
             {[
-              { id: 'overview', label: 'Overview', icon: '📊', gradient: 'from-blue-500 to-cyan-500' },
-              { id: 'jobs', label: 'My Jobs', icon: '💼', gradient: 'from-purple-500 to-indigo-500' },
-              { id: 'applications', label: 'Applications', icon: '📝', gradient: 'from-green-500 to-teal-500' },
-              { id: 'market-intelligence', label: 'Market Intel', icon: '🔍', gradient: 'from-pink-500 to-violet-500' },
-              { id: 'analytics', label: 'Analytics', icon: '📈', gradient: 'from-orange-500 to-red-500' }
+              { id: 'overview', label: 'Overview', icon: '📊' },
+              { id: 'jobs', label: 'My Jobs', icon: '💼' },
+              { id: 'applications', label: 'Applications', icon: '📝' }
             ].map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 py-4 px-6 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center justify-center space-x-2 ${
+                className={`flex-1 py-3 px-4 rounded-xl font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2 ${
                   activeTab === tab.id
-                    ? `bg-linear-to-r ${tab.gradient} text-white shadow-lg transform scale-105`
-                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                    ? 'bg-gray-900 text-white shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                 }`}
               >
                 <span className="text-lg">{tab.icon}</span>
@@ -220,7 +207,7 @@ const EmployerDashboard = ({ onNavigateHome }) => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {activeTab === 'overview' && (
           <div className="space-y-8">
             {/* Stats Cards */}
@@ -462,11 +449,6 @@ const EmployerDashboard = ({ onNavigateHome }) => {
           </div>
         )}
 
-        {(activeTab === 'market-intelligence') && (
-          <div>
-            <MarketIntelligenceDashboard />
-          </div>
-        )}
       </div>
 
       {showPostModal && (
@@ -490,9 +472,7 @@ const EmployerDashboard = ({ onNavigateHome }) => {
 
       {showDeleteConfirm && jobToDelete && (
         <div className="fixed inset-0 flex items-center justify-center z-50">
-          {/* Blur background overlay */}
-          <div className="absolute inset-0 backdrop-blur-md" onClick={() => setShowDeleteConfirm(false)}></div>
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4 shadow-2xl">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Delete Job Posting</h3>
             <p className="text-gray-600 mb-6">
               Are you sure you want to delete "{jobToDelete.title}"? This action cannot be undone.

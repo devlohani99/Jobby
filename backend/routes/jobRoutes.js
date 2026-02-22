@@ -14,16 +14,27 @@ const { authorizeRoles } = require('../middleware/authorizeRoles');
 
 // Public routes
 router.get('/', getAllJobs);
+
+// Employer routes (protected)
+router.get(
+  '/employer/my-jobs',
+  authenticateToken,
+  authorizeRoles('employer'),
+  getMyJobs
+);
+
+router.get(
+  '/employer/stats',
+  authenticateToken,
+  authorizeRoles('employer'),
+  getJobStats
+);
+
+router.post('/', authenticateToken, authorizeRoles('employer'), createJob);
+router.put('/:id', authenticateToken, authorizeRoles('employer'), updateJob);
+router.delete('/:id', authenticateToken, authorizeRoles('employer'), deleteJob);
+
+// Public job detail route (defined last so it doesn't capture employer paths)
 router.get('/:id', getJobById);
-
-// Protected routes
-router.use(authenticateToken);
-
-// Employer only routes
-router.post('/', authorizeRoles('employer'), createJob);
-router.put('/:id', authorizeRoles('employer'), updateJob);
-router.delete('/:id', authorizeRoles('employer'), deleteJob);
-router.get('/employer/my-jobs', authorizeRoles('employer'), getMyJobs);
-router.get('/employer/stats', authorizeRoles('employer'), getJobStats);
 
 module.exports = router;

@@ -7,7 +7,6 @@ import Dashboard from './components/Dashboard';
 import JobSeekerDashboard from './components/JobSeekerDashboard';
 import EmployerDashboard from './components/EmployerDashboard';
 import Profile from './components/Profile';
-import MarketIntelligenceDashboard from './components/MarketIntelligenceDashboard';
 import LoadingScreen from './components/LoadingScreen';
 import BackendLoadingScreen from './components/BackendLoadingScreen';
 import Footer from './components/Footer';
@@ -22,6 +21,7 @@ const AppContent = () => {
   const [checkingBackend, setCheckingBackend] = useState(true);
   const { user, isAuthenticated, loading, logout } = useAuth();
   const userMenuRef = useRef(null);
+  const hasForcedDashboardRef = useRef(false);
 
   // Check backend health on app load
   useEffect(() => {
@@ -51,8 +51,9 @@ const AppContent = () => {
   };
 
   const handleAuthSuccess = () => {
-    // User just logged in, they'll see the backend loading screen if needed
-    // The authentication state will trigger the backend check
+    // When authentication succeeds, drop the user into their dashboard view
+    setCurrentView('dashboard');
+    setDashboardView('dashboard');
   };
 
   useEffect(() => {
@@ -65,12 +66,24 @@ const AppContent = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    if (isAuthenticated && user && !hasForcedDashboardRef.current) {
+      setCurrentView('dashboard');
+      hasForcedDashboardRef.current = true;
+    }
+
+    if (!isAuthenticated) {
+      hasForcedDashboardRef.current = false;
+    }
+  }, [isAuthenticated, user]);
+
 
   const handleLogout = async () => {
     try {
       await logout();
       setShowUserMenu(false);
       setDashboardView('dashboard');
+      setCurrentView('homepage');
     } catch (error) {
       console.error('Logout error:', error);
       alert('Error logging out. Please try again.');
@@ -119,7 +132,10 @@ const AppContent = () => {
                   <span>Home</span>
                 </button>
                 <button
-                  onClick={() => setDashboardView('dashboard')}
+                  onClick={() => {
+                    setCurrentView('dashboard');
+                    setDashboardView('dashboard');
+                  }}
                   className={`px-4 py-2 rounded-xl font-medium text-sm transition-all duration-200 flex items-center space-x-2 ${
                     dashboardView === 'dashboard'
                       ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
@@ -130,7 +146,10 @@ const AppContent = () => {
                   Dashboard
                 </button>
                 <button
-                  onClick={() => setDashboardView('profile')}
+                  onClick={() => {
+                    setCurrentView('dashboard');
+                    setDashboardView('profile');
+                  }}
                   className={`px-3 py-2 rounded-lg font-medium text-sm transition-colors ${
                     dashboardView === 'profile'
                       ? 'bg-blue-100 text-blue-700'
@@ -140,17 +159,7 @@ const AppContent = () => {
                   <span className="mr-2">👤</span>
                   Profile
                 </button>
-                <button
-                  onClick={() => setDashboardView('market-intelligence')}
-                  className={`px-3 py-2 rounded-lg font-medium text-sm transition-colors ${
-                    dashboardView === 'market-intelligence'
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'text-gray-600 hover:text-blue-600'
-                  }`}
-                >
-                  <span className="mr-2">📈</span>
-                  Market Intel
-                </button>
+                
               </div>
             </div>
 
@@ -248,6 +257,7 @@ const AppContent = () => {
                 <button
                   onClick={() => {
                     setDashboardView('dashboard');
+                    setCurrentView('dashboard');
                     setShowMobileMenu(false);
                   }}
                   className={`w-full text-left px-3 py-2 rounded-lg font-medium text-sm transition-colors ${
@@ -262,6 +272,7 @@ const AppContent = () => {
                 <button
                   onClick={() => {
                     setDashboardView('profile');
+                    setCurrentView('dashboard');
                     setShowMobileMenu(false);
                   }}
                   className={`w-full text-left px-3 py-2 rounded-lg font-medium text-sm transition-colors ${
@@ -273,20 +284,7 @@ const AppContent = () => {
                   <span className="mr-2">👤</span>
                   Profile
                 </button>
-                <button
-                  onClick={() => {
-                    setDashboardView('market-intelligence');
-                    setShowMobileMenu(false);
-                  }}
-                  className={`w-full text-left px-3 py-2 rounded-lg font-medium text-sm transition-colors ${
-                    dashboardView === 'market-intelligence'
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'text-gray-600 hover:text-blue-600'
-                  }`}
-                >
-                  <span className="mr-2">📈</span>
-                  Market Intel
-                </button>
+                
               </div>
             </div>
           )}
@@ -297,18 +295,23 @@ const AppContent = () => {
     return (
       <div>
         <NavHeader />
-        {dashboardView === 'profile' ? (
+        {currentView === 'homepage' ? (
+          <Homepage 
+            onSignIn={() => setCurrentView('signin')}
+            onSignUp={() => setCurrentView('signup')}
+            onPostJob={() => setCurrentView('signup')}
+            showStandaloneHeader={false}
+          />
+        ) : dashboardView === 'profile' ? (
           <Profile userType={user.role} />
-        ) : dashboardView === 'market-intelligence' ? (
-          <MarketIntelligenceDashboard />
         ) : user.role === 'employer' ? (
           <EmployerDashboard onNavigateHome={() => setCurrentView('homepage')} />
         ) : (
           <JobSeekerDashboard onNavigateHome={() => setCurrentView('homepage')} />
         )}
-        
+
         {/* Notification Panel */}
-        
+
         <Footer />
       </div>
     );

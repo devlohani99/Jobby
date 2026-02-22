@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-const Homepage = ({ onSignIn, onSignUp, onPostJob }) => {
+const Homepage = ({ onSignIn, onSignUp, onPostJob, showStandaloneHeader = true }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [location, setLocation] = useState('');
   const [jobs, setJobs] = useState([]);
@@ -59,38 +59,40 @@ const Homepage = ({ onSignIn, onSignUp, onPostJob }) => {
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-gray-200/50 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
-            <div className="flex items-center space-x-3">
-              <div className="relative">
-                <div className="absolute inset-0 bg-blue-600/20 rounded-xl blur"></div>
-                <img 
-                  src="/images/jobbylogo.png" 
-                  alt="Jobby Logo" 
-                  className="h-11 w-11 rounded-xl relative" 
-                />
+      {showStandaloneHeader && (
+        <header className="bg-white/80 backdrop-blur-md border-b border-gray-200/50 sticky top-0 z-50">
+          <div className="max-w-7xl mx-auto px-6 lg:px-8">
+            <div className="flex justify-between items-center h-20">
+              <div className="flex items-center space-x-3">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-blue-600/20 rounded-xl blur"></div>
+                  <img 
+                    src="/images/jobbylogo.png" 
+                    alt="Jobby Logo" 
+                    className="h-11 w-11 rounded-xl relative" 
+                  />
+                </div>
+                <h1 className="text-2xl font-bold text-gray-900">Jobby</h1>
               </div>
-              <h1 className="text-2xl font-bold text-gray-900">Jobby</h1>
-            </div>
 
-            <div className="flex items-center gap-3">
-              <button
-                onClick={onSignIn}
-                className="px-5 py-2.5 text-gray-700 hover:text-gray-900 font-medium transition-colors"
-              >
-                Sign In
-              </button>
-              <button
-                onClick={onSignUp}
-                className="px-6 py-2.5 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-all shadow-sm hover:shadow"
-              >
-                Sign Up
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={onSignIn}
+                  className="px-5 py-2.5 text-gray-700 hover:text-gray-900 font-medium transition-colors"
+                >
+                  Sign In
+                </button>
+                <button
+                  onClick={onSignUp}
+                  className="px-6 py-2.5 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-all shadow-sm hover:shadow"
+                >
+                  Sign Up
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
+      )}
 
       {/* Hero Section with Background */}
       <div className="relative bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 pt-20 pb-32 overflow-hidden">

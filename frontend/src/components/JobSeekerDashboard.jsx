@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { jobAPI, applicationAPI } from '../services/api';
 import JobApplicationModal from './JobApplicationModal';
 
@@ -67,6 +67,33 @@ if (typeof document !== 'undefined') {
   document.head.appendChild(styleSheet);
 }
 
+const simplifyApplicationStatus = (status = 'submitted') => {
+  if (status === 'selected') return 'selected';
+  if (status === 'rejected' || status === 'not-selected') return 'rejected';
+  return 'submitted';
+};
+
+const APPLICATION_STATUS_META = {
+  submitted: {
+    badge: 'Pending',
+    emoji: '⏳',
+    classes: 'bg-gray-100 text-gray-800',
+    message: 'The employer is still reviewing your application.',
+  },
+  selected: {
+    badge: 'Selected',
+    emoji: '🎉',
+    classes: 'bg-emerald-100 text-emerald-800',
+    message: 'Great news! The employer marked you as selected.',
+  },
+  rejected: {
+    badge: 'Not Selected',
+    emoji: '❌',
+    classes: 'bg-red-100 text-red-700',
+    message: 'The employer marked you as not selected for this role.',
+  },
+};
+
 const JobSeekerDashboard = ({ onNavigateHome }) => {
   const [activeTab, setActiveTab] = useState('jobs');
   const [jobs, setJobs] = useState([]);
@@ -82,6 +109,32 @@ const JobSeekerDashboard = ({ onNavigateHome }) => {
     employmentType: '',
     jobType: ''
   });
+  const savedLocalFiltersRef = useRef({ location: '', jobType: '' });
+  const filtersSnapshotRef = useRef(filters);
+
+  useEffect(() => {
+    filtersSnapshotRef.current = filters;
+  }, [filters]);
+
+  useEffect(() => {
+    if (jobSource === 'remote') {
+      savedLocalFiltersRef.current = {
+        location: filtersSnapshotRef.current.location,
+        jobType: filtersSnapshotRef.current.jobType
+      };
+      setFilters(prev => ({
+        ...prev,
+        location: '',
+        jobType: ''
+      }));
+    } else {
+      setFilters(prev => ({
+        ...prev,
+        location: savedLocalFiltersRef.current.location || '',
+        jobType: savedLocalFiltersRef.current.jobType || ''
+      }));
+    }
+  }, [jobSource]);
 
   // Helper function to calculate time ago
   const getTimeAgo = (dateString) => {
@@ -201,17 +254,32 @@ const JobSeekerDashboard = ({ onNavigateHome }) => {
     }
   };
 
+  const normalizeFilterValue = (value = '') =>
+    value.toLowerCase().replace(/[_\s]+/g, '-');
+
   const fetchRemoteJobs = async () => {
     try {
       setLoading(true);
-      const searchQuery = searchTerm || 'developer';
+      const searchQuery = searchTerm?.trim() || 'developer';
       const category = filters.category || '';
-      
+      const locationQuery = filters.location?.trim() || '';
+
+      const params = new URLSearchParams({
+        search: searchQuery,
+        limit: '30'
+      });
+
+      if (category) {
+        params.append('category', category);
+      }
+
+      if (locationQuery) {
+        params.append('location', locationQuery);
+      }
+
 
       const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
-      const response = await fetch(
-        `${API_BASE_URL}/remotive-jobs?search=${encodeURIComponent(searchQuery)}${category ? `&category=${encodeURIComponent(category)}` : ''}&limit=30`
-      );
+      const response = await fetch(`${API_BASE_URL}/remotive-jobs?${params.toString()}`);
       
       if (!response.ok) {
         throw new Error('Failed to fetch remote jobs');
@@ -221,30 +289,72 @@ const JobSeekerDashboard = ({ onNavigateHome }) => {
       const remoteJobs = data.jobs || [];
       
 
-      const formattedJobs = remoteJobs.map(job => ({
-        _id: `remote_${job.id}`,
-        title: job.title,
-        company: job.company_name,
-        location: job.candidate_required_location || 'Remote • Worldwide',
-        salary: job.salary || 'Competitive salary',
-        employmentType: job.job_type || 'Full-time',
-        jobType: 'Remote',
-        description: job.description?.replace(/<[^>]*>/g, '') || 'No description available',
-        requirements: [],
-        responsibilities: [],
-        skills: [],
-        benefits: [],
-        postedAgo: job.publication_date ? getTimeAgo(job.publication_date) : 'Recently posted',
-        applications: Math.floor(Math.random() * 50),
-        views: Math.floor(Math.random() * 500),
-        status: 'active',
-        category: job.category || 'Technology',
-        isRemote: true,
-        originalUrl: job.url,
-        companyLogo: job.company_logo
-      }));
+      const formattedJobs = remoteJobs.map(job => {
+        const employmentType = normalizeFilterValue(job.job_type || 'full-time');
+        const jobLocation = job.candidate_required_location || 'Remote • Worldwide';
+        const categorySlug = job.category ? normalizeFilterValue(job.category) : '';
 
-      setJobs(formattedJobs);
+        return {
+          _id: `remote_${job.id}`,
+          title: job.title,
+          company: job.company_name,
+          location: jobLocation,
+          salary: job.salary || 'Competitive salary',
+          employmentType,
+          jobType: 'remote',
+          description: job.description?.replace(/<[^>]*>/g, '') || 'No description available',
+          requirements: [],
+          responsibilities: [],
+          skills: [],
+          benefits: [],
+          postedAgo: job.publication_date ? getTimeAgo(job.publication_date) : 'Recently posted',
+          applications: Math.floor(Math.random() * 50),
+          views: Math.floor(Math.random() * 500),
+          status: 'active',
+          category: job.category || 'Technology',
+          categorySlug,
+          isRemote: true,
+          originalUrl: job.url,
+          companyLogo: job.company_logo
+        };
+      });
+
+      const filteredJobs = formattedJobs.filter((job) => {
+        if (filters.category) {
+          if (job.categorySlug !== filters.category) {
+            return false;
+          }
+        }
+
+        if (locationQuery) {
+          const jobLocationText = job.location?.toLowerCase() || '';
+          if (!jobLocationText.includes(locationQuery.toLowerCase())) {
+            return false;
+          }
+        }
+
+        if (filters.employmentType) {
+          const jobEmployment = normalizeFilterValue(job.employmentType || '');
+          if (jobEmployment !== filters.employmentType) {
+            return false;
+          }
+        }
+
+        if (filters.jobType) {
+          const jobTypeValue = normalizeFilterValue(job.jobType || 'remote');
+          if (filters.jobType === 'remote') {
+            if (!(job.isRemote || jobTypeValue === 'remote')) {
+              return false;
+            }
+          } else if (jobTypeValue !== filters.jobType) {
+            return false;
+          }
+        }
+
+        return true;
+      });
+
+      setJobs(filteredJobs);
     } catch (error) {
       console.error('Error fetching remote jobs:', error);
       // Show some fallback jobs even on error
@@ -255,8 +365,8 @@ const JobSeekerDashboard = ({ onNavigateHome }) => {
           company: 'Tech Solutions',
           location: 'Remote • Worldwide',
           salary: '$60,000 - $90,000',
-          employmentType: 'Full-time',
-          jobType: 'Remote',
+          employmentType: 'full-time',
+          jobType: 'remote',
           description: 'Join our team as a Software Developer working on innovative projects.',
           requirements: [],
           responsibilities: [],
@@ -267,6 +377,7 @@ const JobSeekerDashboard = ({ onNavigateHome }) => {
           views: 120,
           status: 'active',
           category: 'Technology',
+          categorySlug: 'technology',
           isRemote: true,
           originalUrl: '#',
           companyLogo: 'https://via.placeholder.com/50'
@@ -344,91 +455,72 @@ const JobSeekerDashboard = ({ onNavigateHome }) => {
     }
   };
 
+  const handleBackToHome = () => {
+    if (typeof onNavigateHome === 'function') {
+      onNavigateHome();
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gray-50">
       {/* Hero Header */}
-      <div className="bg-linear-to-r from-blue-600 via-purple-600 to-indigo-700 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="flex justify-between items-center">
-            {/* Jobby Logo and Navigation */}
-            <div className="flex items-center gap-6">
-              <button 
-                onClick={onNavigateHome}
-                className="jobby-logo flex items-center space-x-3 group cursor-pointer"
-                title="Back to Homepage"
-              >
-                <div className="w-12 h-12 bg-linear-to-r from-purple-400 to-pink-400 rounded-xl flex items-center justify-center group-hover:shadow-lg transition-all duration-300">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2V6" />
-                  </svg>
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold bg-linear-to-r from-white to-blue-100 bg-clip-text text-transparent group-hover:from-purple-200 group-hover:to-pink-200 transition-all duration-300">
-                    Jobby
-                  </h2>
-                  <p className="text-blue-100 text-sm group-hover:text-purple-200 transition-colors duration-300">Job Portal Platform</p>
-                </div>
-              </button>
-              
-              <div className="h-8 w-px bg-white/20"></div>
-              
-              <div>
-                <div className="flex items-center gap-4 mb-2">
-                  <div className="w-8 h-8 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center animate-bounce-subtle">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                  </div>
-                  <h1 className="text-3xl font-bold bg-linear-to-r from-white to-blue-100 bg-clip-text animate-slideIn">
-                    Find Your Dream Job
-                  </h1>
-                </div>
-                <p className="text-blue-100 text-lg animate-fadeIn">Discover opportunities that match your skills and passion</p>
-              </div>
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+          <div className="flex flex-wrap items-center justify-between gap-6">
+            <div>
+              {onNavigateHome && (
+                <button
+                  type="button"
+                  onClick={handleBackToHome}
+                  className="text-sm font-medium text-gray-500 hover:text-gray-900 inline-flex items-center gap-2 mb-4"
+                >
+                  <span className="text-lg">←</span>
+                  <span>Back to Home</span>
+                </button>
+              )}
+              <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Job seeker workspace</p>
+              <h1 className="text-3xl font-semibold text-gray-900 mt-2">Find roles that match your skills</h1>
+              <p className="text-gray-500 mt-1">Keep things focused: search locally or browse curated remote roles.</p>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex flex-wrap items-center gap-4 justify-end">
               {/* Job Source Toggle */}
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-1 border border-white/20">
-                <div className="flex items-center">
-                  <button
-                    onClick={() => setJobSource('local')}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                      jobSource === 'local'
-                        ? 'bg-white text-blue-600 shadow-md'
-                        : 'text-white/80 hover:text-white hover:bg-white/10'
-                    }`}
-                  >
-                    Local Jobs
-                  </button>
-                  <button
-                    onClick={() => setJobSource('remote')}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                      jobSource === 'remote'
-                        ? 'bg-white text-blue-600 shadow-md'
-                        : 'text-white/80 hover:text-white hover:bg-white/10'
-                    }`}
-                  >
-                    Remote Jobs
-                  </button>
-                </div>
+              <div className="flex items-center rounded-xl border border-gray-200 bg-gray-100 p-1">
+                <button
+                  onClick={() => setJobSource('local')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    jobSource === 'local'
+                      ? 'bg-white text-gray-900 shadow'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Local Jobs
+                </button>
+                <button
+                  onClick={() => setJobSource('remote')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    jobSource === 'remote'
+                      ? 'bg-white text-gray-900 shadow'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Remote Jobs
+                </button>
               </div>
 
               <button
                 onClick={jobSource === 'local' ? fetchJobs : fetchRemoteJobs}
                 disabled={loading}
-                className="group px-6 py-3 bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white rounded-xl font-medium transition-all duration-300 flex items-center space-x-2 border border-white/20"
+                className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-5 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:opacity-50"
               >
-                <svg className={`w-5 h-5 ${loading ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-300'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
                 <span>{loading ? 'Refreshing...' : 'Refresh Jobs'}</span>
               </button>
-              <div className="bg-white/10 backdrop-blur-sm px-4 py-3 rounded-xl border border-white/20">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-white">{jobs.length}</div>
-                  <div className="text-blue-100 text-sm">
-                    {jobSource === 'local' ? 'local jobs' : 'remote jobs'}
-                  </div>
+              <div className="rounded-2xl bg-gray-900 px-4 py-3 text-white text-center">
+                <div className="text-2xl font-semibold">{jobs.length}</div>
+                <div className="text-xs text-gray-300 uppercase tracking-wide">
+                  {jobSource === 'local' ? 'local jobs' : 'remote jobs'}
                 </div>
               </div>
             </div>
@@ -437,20 +529,20 @@ const JobSeekerDashboard = ({ onNavigateHome }) => {
       </div>
 
       {/* Modern Navigation Tabs */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 relative z-10">
-        <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 p-2">
-          <nav className="flex">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-10">
+        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-1">
+          <nav className="flex gap-2">
             {[
-              { id: 'jobs', label: 'Browse Jobs', icon: '🔍', gradient: 'from-blue-500 to-cyan-500' },
-              { id: 'applications', label: 'My Applications', icon: '📋', gradient: 'from-purple-500 to-pink-500' }
+              { id: 'jobs', label: 'Browse Jobs', icon: '🔍' },
+              { id: 'applications', label: 'My Applications', icon: '📋' }
             ].map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 py-4 px-6 rounded-xl font-medium text-sm transition-all duration-300 flex items-center justify-center space-x-2 ${
+                className={`flex-1 py-3 px-4 rounded-xl font-medium text-sm transition-all flex items-center justify-center gap-2 ${
                   activeTab === tab.id
-                    ? `bg-gradient-to-r ${tab.gradient} text-white shadow-lg transform scale-105`
-                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                    ? 'bg-gray-900 text-white shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                 }`}
               >
                 <span className="text-lg">{tab.icon}</span>
@@ -461,7 +553,7 @@ const JobSeekerDashboard = ({ onNavigateHome }) => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {activeTab === 'jobs' && (
           <div className="space-y-8">
             {/* Enhanced Search and Filters */}
@@ -517,24 +609,26 @@ const JobSeekerDashboard = ({ onNavigateHome }) => {
                     </select>
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700">📍 Location</label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
+                  {jobSource === 'local' && (
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">📍 Location</label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                        </div>
+                        <input
+                          type="text"
+                          placeholder="City, State"
+                          value={filters.location}
+                          onChange={(e) => setFilters({ ...filters, location: e.target.value })}
+                          className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
+                        />
                       </div>
-                      <input
-                        type="text"
-                        placeholder="City, State"
-                        value={filters.location}
-                        onChange={(e) => setFilters({ ...filters, location: e.target.value })}
-                        className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
-                      />
                     </div>
-                  </div>
+                  )}
 
                   <div className="space-y-2">
                     <label className="block text-sm font-medium text-gray-700">⏰ Employment Type</label>
@@ -552,19 +646,21 @@ const JobSeekerDashboard = ({ onNavigateHome }) => {
                     </select>
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700">🏢 Work Type</label>
-                    <select
-                      value={filters.jobType}
-                      onChange={(e) => setFilters({ ...filters, jobType: e.target.value })}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
-                    >
-                      <option value="">All Locations</option>
-                      <option value="remote">🏠 Remote</option>
-                      <option value="on-site">🏢 On-site</option>
-                      <option value="hybrid">🔄 Hybrid</option>
-                    </select>
-                  </div>
+                  {jobSource === 'local' && (
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">🏢 Work Type</label>
+                      <select
+                        value={filters.jobType}
+                        onChange={(e) => setFilters({ ...filters, jobType: e.target.value })}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
+                      >
+                        <option value="">All Locations</option>
+                        <option value="remote">🏠 Remote</option>
+                        <option value="on-site">🏢 On-site</option>
+                        <option value="hybrid">🔄 Hybrid</option>
+                      </select>
+                    </div>
+                  )}
                 </div>
 
                 {(searchTerm || Object.values(filters).some(v => v)) && (
@@ -751,7 +847,11 @@ const JobSeekerDashboard = ({ onNavigateHome }) => {
               </div>
             ) : applications.length > 0 ? (
               <div className="space-y-4">
-                {applications.map(application => (
+                {applications.map(application => {
+                  const simpleStatus = simplifyApplicationStatus(application.status);
+                  const statusMeta = APPLICATION_STATUS_META[simpleStatus] || APPLICATION_STATUS_META.submitted;
+
+                  return (
                   <div key={application._id} className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200">
                     <div className="p-6">
                       <div className="flex justify-between items-start mb-4">
@@ -796,26 +896,13 @@ const JobSeekerDashboard = ({ onNavigateHome }) => {
                         </div>
                         
                         <div className="text-right ml-4">
-                          <span className={`inline-flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium ${
-                            application.status === 'submitted' ? 'bg-blue-100 text-blue-800' :
-                            application.status === 'under-review' ? 'bg-yellow-100 text-yellow-800' :
-                            application.status === 'shortlisted' ? 'bg-green-100 text-green-800' :
-                            application.status === 'interview-scheduled' ? 'bg-purple-100 text-purple-800' :
-                            application.status === 'selected' ? 'bg-emerald-100 text-emerald-800' :
-                            application.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                            'bg-gray-100 text-gray-800'
-                          }`}>
-                            {application.status === 'submitted' && '📤'}
-                            {application.status === 'under-review' && '👀'}
-                            {application.status === 'shortlisted' && '⭐'}
-                            {application.status === 'interview-scheduled' && '📅'}
-                            {application.status === 'selected' && '🎉'}
-                            {application.status === 'rejected' && '❌'}
-                            {application.status === 'withdrawn' && '↩️'}
-                            <span className="capitalize">
-                              {application.status.replace('-', ' ')}
-                            </span>
+                          <span className={`inline-flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium ${statusMeta.classes}`}>
+                            <span>{statusMeta.emoji}</span>
+                            <span>{statusMeta.badge}</span>
                           </span>
+                          <p className="text-xs text-gray-500 mt-2 max-w-xs ml-auto">
+                            {statusMeta.message}
+                          </p>
                         </div>
                       </div>
 
@@ -852,7 +939,7 @@ const JobSeekerDashboard = ({ onNavigateHome }) => {
                       </div>
                     </div>
                   </div>
-                ))}
+                )})}
               </div>
             ) : (
               <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-100 p-12 text-center">

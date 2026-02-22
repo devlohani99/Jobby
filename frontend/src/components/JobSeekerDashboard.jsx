@@ -928,14 +928,11 @@ const JobSeekerDashboard = ({ onNavigateHome }) => {
                         </div>
                       )}
 
-                      {/* Action button */}
-                      <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-100">
+                      {/* Application metadata */}
+                      <div className="flex items-center mt-4 pt-4 border-t border-gray-100">
                         <div className="text-xs text-gray-400">
                           Application ID: {application._id?.slice(-8)}
                         </div>
-                        <button className="text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors">
-                          View Details →
-                        </button>
                       </div>
                     </div>
                   </div>

@@ -211,7 +211,7 @@ const EmployerDashboard = ({ onNavigateHome }) => {
         {activeTab === 'overview' && (
           <div className="space-y-8">
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                 <div className="flex items-center">
                   <div className="p-3 rounded-full bg-blue-100 text-blue-600 text-xl">💼</div>
@@ -231,17 +231,6 @@ const EmployerDashboard = ({ onNavigateHome }) => {
                   </div>
                 </div>
               </div>
-              
-              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <div className="flex items-center">
-                  <div className="p-3 rounded-full bg-purple-100 text-purple-600 text-xl">👁️</div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-500">Total Views</p>
-                    <p className="text-2xl font-bold text-gray-900">{stats?.totalViews || 0}</p>
-                  </div>
-                </div>
-              </div>
-              
               <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                 <div className="flex items-center">
                   <div className="p-3 rounded-full bg-orange-100 text-orange-600 text-xl">📝</div>

@@ -400,9 +400,6 @@ const EmployerDashboard = ({ onNavigateHome }) => {
                                 <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">
                                   Under Review
                                 </span>
-                                <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                                  View Application
-                                </button>
                               </div>
                             </div>
                           ))}

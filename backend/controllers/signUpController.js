@@ -1,13 +1,7 @@
 const User = require('../model/User');
 const { hashPassword } = require('../utils/passwordUtils');
 const { validateSignUp } = require('../validation/userValidation');
-const jwt = require('jsonwebtoken');
-
-const generateToken = (userId) => {
-  return jwt.sign({ userId }, process.env.JWT_SECRET || 'fallback_secret', {
-    expiresIn: '7d'
-  });
-};
+const { generateTokens } = require('../utils/tokenUtils');
 
 const signUp = async (req, res) => {
   try {
@@ -38,8 +32,18 @@ const signUp = async (req, res) => {
       role
     });
 
+    const { accessToken, refreshToken } = generateTokens(user._id);
+
+    user.refreshTokens = [refreshToken];
+
     await user.save();
-    const token = generateToken(user._id);
+
+    res.cookie('jwt', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'None', // required if frontend and backend are on different domains
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
 
     res.status(201).json({
       success: true,
@@ -50,7 +54,7 @@ const signUp = async (req, res) => {
           email: user.email,
           role: user.role
         },
-        token
+        token: accessToken
       }
     });
 

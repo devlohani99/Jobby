@@ -4,6 +4,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000
 
 const api = axios.create({
   baseURL: API_BASE_URL,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -19,14 +20,54 @@ api.interceptors.request.use((config) => {
 
 api.interceptors.response.use(
   (response) => response.data,
-  (error) => {
-    // Only redirect to login on 401 if there's a token (authenticated request failed)
-    // Don't redirect during sign-in attempts
-    if (error.response?.status === 401 && localStorage.getItem('token')) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/';
+  async (error) => {
+    const originalRequest = error.config;
+
+    // Optional: Avoid retrying login/signup/refresh requests
+    const isAuthRoute = originalRequest.url.includes('/auth/signin') || 
+                        originalRequest.url.includes('/auth/signup') || 
+                        originalRequest.url.includes('/auth/refresh');
+
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthRoute) {
+      originalRequest._retry = true;
+
+      try {
+        // Attempt to refresh token using the http-only cookie
+        const refreshResponse = await api.get('/auth/refresh');
+        
+        if (refreshResponse.success && refreshResponse.data.token) {
+          const newToken = refreshResponse.data.token;
+          
+          // Update local storage token
+          tokenManager.setToken(newToken);
+          
+          // Retry original request with new token
+          originalRequest.headers.Authorization = `Bearer ${newToken}`;
+          // Let's use axios(originalRequest) instead of api(originalRequest) directly
+          // Wait, returning axios instance with config will use interceptors again.
+          const retryResponse = await axios({
+             ...originalRequest,
+             baseURL: '', // avoid appending base url again if url is absolute, but originalRequest usually has full config
+          });
+          return retryResponse.data;
+        }
+      } catch (refreshError) {
+        // If refresh fails, log out
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/';
+        const message = refreshError.response?.data?.message || 'Session expired. Please log in again.';
+        throw new Error(message);
+      }
     }
+
+    if (error.response?.status === 401 && !isAuthRoute && localStorage.getItem('token')) {
+       // fallback catch
+       localStorage.removeItem('token');
+       localStorage.removeItem('user');
+       window.location.href = '/';
+    }
+
     const message = error.response?.data?.message || error.message || 'Request failed';
     throw new Error(message);
   }

@@ -20,7 +20,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['jobseeker', 'employer'],
     required: true
-  }
+  },
+  refreshTokens: [{
+    type: String
+  }]
 }, {
   timestamps: true
 });

@@ -1,155 +1,175 @@
-# Jobby - Job Portal Application
+# Jobby
 
-A full-stack job portal application with role-based authentication for job seekers and employers.
-
-## Features
-
-- **Role-based Authentication**: Separate signup/signin for job seekers and employers
-- **Secure Backend**: JWT token-based authentication with bcrypt password hashing
-- **Modern Frontend**: React with Vite build tool and Tailwind CSS styling
-- **Modular Architecture**: Clean, interview-ready code structure
+Jobby is a full-stack recruitment platform that lets employers post openings, track applicants, and gives job seekers a personalized board that blends internal listings with real-time remote jobs from external APIs. The project is split into a Vite + React frontend and an Express + MongoDB backend, with automated health checks for Render and deploy-ready configs for Vercel.
 
 ## Tech Stack
 
-### Backend
-- Node.js with Express.js
-- MongoDB with Mongoose ODM
-- JWT for authentication
-- bcryptjs for password hashing
-- Express middleware for validation and error handling
+| Layer      | Technology |
+|------------|------------|
+| Frontend   | React 19, Vite, Tailwind utility classes |
+| Backend    | Node 18+, Express 4, Mongoose 8 |
+| Auth       | JWT (Access + Refresh Token Rotation), HTTP-only Cookies, bcryptjs |
+| Storage    | MongoDB Atlas (or any MongoDB 6+) |
+| APIs       | Remotive, Serper (Google SERP) |
+| Tooling    | Axios, Multer, Nodemon |
 
-### Frontend
-- React 19
-- Vite build tool
-- Tailwind CSS for styling
-- Axios for HTTP requests
-- Context API for state management
+## Feature Highlights
+
+### Job Seekers
+- Unified job search with keyword, location, employment type, and work-style filters.
+- Toggle between internal (database) jobs and remote roles sourced from Remotive + Serper.
+- Realtime refresh: interval polling plus a browser event when new jobs are posted.
+- Application history with status badges (submitted, selected, rejected).
+- Smart fallbacks that keep showing relevant suggestions even if third-party APIs fail.
+
+### Employers
+- Role-gated dashboard with KPI cards (jobs, applications, views, response rate).
+- Quick “Post New Job” modal with salary + location normalization and server-side validation.
+- Manage jobs (edit, soft delete, stats) and inspect applicant summaries per posting.
+- Automatic refresh when new postings are created from any session.
+
+### Platform
+- JWT-authenticated APIs with layered role authorization middleware and secure Token Rotation (using short-lived Access Tokens and HTTP-only Refresh Cookies).
+- Rich job filters handled server-side (text search, location regex, salary bounds, experience, pagination, sorting).
+- Remote job aggregator that merges external APIs, caches results, and falls back to curated mock data when needed.
+- Market intelligence endpoints that transform Serper search results into insights (salary trends, demand, skills, top employers) and power the dashboard widget.
+- Health endpoint (`/api/health`) for Render/Vercel uptime checks.
 
 ## Project Structure
 
 ```
-jobby/
-├── backend/
-│   ├── config/
-│   │   └── database.js
+Jobby/
+├── backend/         # Express API, Mongo models, controllers, routes
 │   ├── controllers/
-│   │   ├── signUp.js
-│   │   ├── signIn.js
-│   │   └── logout.js
 │   ├── middleware/
-│   │   ├── auth.js
-│   │   ├── authorizationRole.js
-│   │   ├── validation.js
-│   │   └── errorHandler.js
 │   ├── model/
-│   │   └── User.js
 │   ├── routes/
-│   │   ├── signUp.js
-│   │   ├── signIn.js
-│   │   └── logout.js
-│   ├── utils/
-│   │   └── password.js
-│   ├── validation/
-│   │   └── user.js
-│   ├── .env
+│   ├── services/
 │   └── server.js
-└── frontend/
-    ├── src/
-    │   ├── components/
-    │   │   ├── SignUp.jsx
-    │   │   ├── SignIn.jsx
-    │   │   └── Dashboard.jsx
-    │   ├── services/
-    │   │   ├── api.js
-    │   │   └── AuthContext.jsx
-    │   ├── App.jsx
-    │   ├── main.jsx
-    │   └── index.css
-    ├── index.html
-    ├── package.json
-    └── vite.config.js
+├── frontend/        # Vite + React app
+│   ├── src/
+│   │   ├── components/
+│   │   └── services/
+│   └── vite.config.js
+├── render.yaml      # Render service config sample
+└── vercel.json      # Vercel deployment settings
 ```
+
+## Environment Variables
+
+### Backend (`backend/.env`)
+
+| Variable | Description |
+|----------|-------------|
+| `PORT` | API port (defaults to 5000) |
+| `MONGODB_URI` | MongoDB connection string |
+| `JWT_SECRET` | Secret for signing short-lived access tokens |
+| `JWT_REFRESH_SECRET` | Secret for signing long-lived refresh tokens |
+| `SERPER_API_KEY` | Key for google.serper.dev search API |
+| `FRONTEND_ORIGIN` | (Optional) Comma-separated additional CORS origins |
+
+### Frontend (`frontend/.env`)
+
+| Variable | Description |
+|----------|-------------|
+| `VITE_API_BASE_URL` | Points to the running backend (e.g., `http://localhost:5000/api`) |
+
+> Never commit secrets. Use `.env.local` files or platform-specific secret managers in production.
 
 ## Getting Started
 
 ### Prerequisites
-- Node.js (v16 or higher)
-- MongoDB connection (local or cloud)
-- npm or yarn
+- Node.js 18+
+- npm 9+
+- MongoDB instance (local or Atlas)
+- Serper API key (optional, required for live Google SERP data)
 
-### Backend Setup
+### Clone & Install
 
-1. Navigate to the backend directory:
-   ```bash
-   cd backend
-   ```
+```bash
+# Clone the repository
+git clone https://github.com/devlohani99/Jobby.git
+cd Jobby
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+# Install backend deps
+cd backend
+npm install
 
-3. Create a `.env` file:
-   ```
-   MONGO_URL=your_mongodb_connection_string
-   JWT_SECRET=your_jwt_secret_key
-   PORT=5000
-   SERPER_API_KEY=serper_google_search_api_key
-   ```
+# Install frontend deps
+cd ../frontend
+npm install
+```
 
-   - `SERPER_API_KEY` powers the quick stats/trending skills endpoints and provides a fallback when live listings are unavailable.
-   - Real-time market intelligence now relies on the public Arbeitnow Job Board API, which is free and requires no credentials.
+### Run the Backend
 
-4. Start the server:
-   ```bash
-   npm start
-   ```
+```bash
+cd backend
+cp .env.example .env   # create and fill in values if you maintain an example file
+npm run dev            # or npm start for production mode
+```
 
-### Frontend Setup
+The API boots on `http://localhost:5000`. Confirm with `GET /api/health`.
 
-1. Navigate to the frontend directory:
-   ```bash
-   cd frontend
-   ```
+### Run the Frontend
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+```bash
+cd frontend
+npm run dev
+```
 
-3. Start the development server:
-   ```bash
-   npm run dev
-   ```
+Vite serves the UI on `http://localhost:5173` (or next free port). Set `VITE_API_BASE_URL` to your backend origin if it differs.
 
-## API Endpoints
+### Recommended Workflow
+1. Start MongoDB and the backend (`npm run dev`).
+2. Start the frontend (`npm run dev`).
+3. Sign up two users: one `jobseeker`, one `employer`.
+4. Publish a job via the employer dashboard; the seeker view will refresh automatically.
 
-- `POST /api/signup` - User registration
-- `POST /api/signin` - User login
-- `POST /api/logout` - User logout (requires authentication)
+## Key API Endpoints
 
-## Authentication Flow
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/api/auth/signup` | Create account and receive JWT pair |
+| `POST` | `/api/auth/signin` | Authenticate and receive JWT pair |
+| `POST` | `/api/auth/logout` | Invalidate session client-side & clear refresh cookie |
+| `GET`  | `/api/auth/refresh` | Rotate refresh token and get new access token |
+| `GET`  | `/api/jobs` | List jobs with filters/pagination |
+| `POST` | `/api/jobs` | Create job (employer) |
+| `PUT`  | `/api/jobs/:id` | Update job (employer) |
+| `DELETE` | `/api/jobs/:id` | Soft delete job |
+| `GET` | `/api/jobs/employer/my-jobs` | Employer’s postings |
+| `GET` | `/api/jobs/employer/stats` | Aggregate dashboard metrics |
+| `GET` | `/api/remotive-jobs` | Aggregated remote roles (Remotive + Serper + fallback) |
+| `GET` | `/api/market-intelligence/:jobTitle/:location` | Serper-backed insights |
+| `GET` | `/api/health` | Liveness probe |
 
-1. Users can register as either "jobseeker" or "employer"
-2. JWT tokens are issued upon successful login
-3. Tokens are stored in localStorage for persistence
-4. Protected routes require valid JWT tokens
-5. Role-based access control for different user types
+Additional routes exist for applications and market stats—use the source for the exact contract.
 
-## Development Status
+## Deployment Notes
 
-- ✅ Backend authentication system
-- ✅ Frontend components with routing
-- ✅ Tailwind CSS styling
-- ✅ API integration with Axios
-- 🔄 Dashboard functionality (in progress)
-- 🔄 Job posting features (planned)
-- 🔄 Job search functionality (planned)
+- **Backend (Render/Fly/Any Node host):** use `npm install && npm run start`, set all environment variables, and ensure MongoDB is reachable. The included `render.yaml` shows a sample service definition with health check.
+- **Frontend (Vercel/Netlify):** build with `npm run build`; set `VITE_API_BASE_URL` to the deployed backend URL. The repo includes a `vercel.json` for clean routing.
+- **CORS:** update `backend/server.js` origins to include any new frontend domains.
+
+## Troubleshooting
+
+| Issue | Fix |
+|-------|-----|
+| `Network error - backend server may be unavailable` | Confirm backend is running and `VITE_API_BASE_URL` is correct. |
+| `Session expired. Please log in again.` | Token rotation failed, likely due to an expired or revoked refresh token. Re-authenticate. |
+| No remote jobs returned | Verify `SERPER_API_KEY` and network access to Remotive. The UI will fall back to curated data if both fail. |
+| Mongo connection errors | Ensure `MONGODB_URI` is correct and accessible from your environment. |
 
 ## Contributing
 
-This project follows clean code principles and is structured for scalability and maintainability. Each component has a single responsibility, making it easy to understand and extend.
+1. Fork the repo and create a feature branch.
+2. Follow the existing code style (lint before committing).
+3. Add or update documentation/tests when introducing changes.
+4. Open a Pull Request with a clear summary and screenshots/GIFs where helpful.
 
 ## License
 
-MIT License
+This project is released under the ISC license. Feel free to build on it, but attribution is appreciated.
+
+---
+Feel free to open issues for bugs, questions, or feature requests. Happy building!

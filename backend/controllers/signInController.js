@@ -1,13 +1,7 @@
 const User = require('../model/User');
 const { comparePassword } = require('../utils/passwordUtils');
 const { validateSignIn } = require('../validation/userValidation');
-const jwt = require('jsonwebtoken');
-
-const generateToken = (userId) => {
-  return jwt.sign({ userId }, process.env.JWT_SECRET || 'fallback_secret', {
-    expiresIn: '7d'
-  });
-};
+const { generateTokens } = require('../utils/tokenUtils');
 
 const signIn = async (req, res) => {
   try {
@@ -37,7 +31,20 @@ const signIn = async (req, res) => {
       });
     }
 
-    const token = generateToken(user._id);
+    const { accessToken, refreshToken } = generateTokens(user._id);
+
+    // Save refresh token to user model
+    user.refreshTokens = user.refreshTokens || [];
+    user.refreshTokens.push(refreshToken);
+    await user.save();
+
+    // Set HTTP-only cookie
+    res.cookie('jwt', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'None', // required if frontend and backend are on different domains
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
 
     res.status(200).json({
       success: true,
@@ -48,7 +55,7 @@ const signIn = async (req, res) => {
           email: user.email,
           role: user.role
         },
-        token
+        token: accessToken // Returning accessToken as 'token' to keep frontend mostly compatible if possible, or just accessToken.
       }
     });
 

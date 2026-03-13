@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const cookieParser = require('cookie-parser');
 const connectDB = require('./config/database');
 const { handleErrors } = require('./middleware/handleErrors');
 
@@ -9,6 +10,7 @@ const { handleErrors } = require('./middleware/handleErrors');
 const signUpRoute = require('./routes/signUpRoute');
 const signInRoute = require('./routes/signInRoute');
 const logoutRoute = require('./routes/logoutRoute');
+const refreshTokenRoute = require('./routes/refreshTokenRoute');
 const jobRoutes = require('./routes/jobRoutes');
 const applicationRoutes = require('./routes/applicationRoutes');
 const remoteJobsRoute = require('./routes/remoteJobs');
@@ -33,6 +35,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // Serve static files (for uploaded resumes)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -41,6 +44,8 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/auth', signUpRoute);
 app.use('/api/auth', signInRoute);
 app.use('/api/auth', logoutRoute);
+app.use('/api/auth/refresh', refreshTokenRoute);
+
 
 // Job and application routes
 app.use('/api/jobs', jobRoutes);

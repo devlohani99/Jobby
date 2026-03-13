@@ -4,6 +4,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000
 
 const api = axios.create({
   baseURL: API_BASE_URL,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -19,11 +20,45 @@ api.interceptors.request.use((config) => {
 
 api.interceptors.response.use(
   (response) => response.data,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/';
+  async (error) => {
+    const originalRequest = error.config;
+
+    const isAuthRoute = originalRequest?.url?.includes('/auth/signin') || 
+                        originalRequest?.url?.includes('/auth/signup') || 
+                        originalRequest?.url?.includes('/auth/refresh');
+
+    if (error.response?.status === 401 && originalRequest && !originalRequest._retry && !isAuthRoute) {
+      originalRequest._retry = true;
+
+      try {
+        const refreshResponse = await api.get('/auth/refresh');
+        
+        if (refreshResponse.success && refreshResponse.data.token) {
+          const newToken = refreshResponse.data.token;
+          
+          localStorage.setItem('token', newToken);
+          
+          originalRequest.headers.Authorization = `Bearer ${newToken}`;
+          
+          const retryResponse = await axios({
+             ...originalRequest,
+             baseURL: '',
+          });
+          return retryResponse.data;
+        }
+      } catch (refreshError) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/';
+        const message = refreshError.response?.data?.message || 'Session expired. Please log in again.';
+        throw new Error(message);
+      }
+    }
+
+    if (error.response?.status === 401 && !isAuthRoute && localStorage.getItem('token')) {
+       localStorage.removeItem('token');
+       localStorage.removeItem('user');
+       window.location.href = '/';
     }
     
     let message = 'Request failed';

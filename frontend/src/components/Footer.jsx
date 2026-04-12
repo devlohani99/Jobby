@@ -55,7 +55,7 @@ const Footer = () => {
           {/* Copyright */}
           <div className="text-center md:text-right">
             <p className="text-gray-400 text-sm">
-              © 2026 Jobby. Built with ❤️ by DevLohani
+              2026 Jobby. Built by DevLohani
             </p>
             <p className="text-gray-500 text-xs mt-1">
               Powered by React • Node.js • MongoDB

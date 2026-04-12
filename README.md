@@ -8,7 +8,7 @@ Jobby is a full-stack recruitment platform that lets employers post openings, tr
 |------------|------------|
 | Frontend   | React 19, Vite, Tailwind utility classes |
 | Backend    | Node 18+, Express 4, Mongoose 8 |
-| Auth       | JWT (Access + Refresh Token Rotation), HTTP-only Cookies, bcryptjs |
+| Auth       | JWT + bcryptjs |
 | Storage    | MongoDB Atlas (or any MongoDB 6+) |
 | APIs       | Remotive, Serper (Google SERP) |
 | Tooling    | Axios, Multer, Nodemon |
@@ -29,7 +29,7 @@ Jobby is a full-stack recruitment platform that lets employers post openings, tr
 - Automatic refresh when new postings are created from any session.
 
 ### Platform
-- JWT-authenticated APIs with layered role authorization middleware and secure Token Rotation (using short-lived Access Tokens and HTTP-only Refresh Cookies).
+- JWT-authenticated APIs with layered role authorization middleware.
 - Rich job filters handled server-side (text search, location regex, salary bounds, experience, pagination, sorting).
 - Remote job aggregator that merges external APIs, caches results, and falls back to curated mock data when needed.
 - Market intelligence endpoints that transform Serper search results into insights (salary trends, demand, skills, top employers) and power the dashboard widget.
@@ -63,8 +63,7 @@ Jobby/
 |----------|-------------|
 | `PORT` | API port (defaults to 5000) |
 | `MONGODB_URI` | MongoDB connection string |
-| `JWT_SECRET` | Secret for signing short-lived access tokens |
-| `JWT_REFRESH_SECRET` | Secret for signing long-lived refresh tokens |
+| `JWT_SECRET` | Secret for signing access tokens |
 | `SERPER_API_KEY` | Key for google.serper.dev search API |
 | `FRONTEND_ORIGIN` | (Optional) Comma-separated additional CORS origins |
 
@@ -129,10 +128,9 @@ Vite serves the UI on `http://localhost:5173` (or next free port). Set `VITE_API
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `POST` | `/api/auth/signup` | Create account and receive JWT pair |
-| `POST` | `/api/auth/signin` | Authenticate and receive JWT pair |
-| `POST` | `/api/auth/logout` | Invalidate session client-side & clear refresh cookie |
-| `GET`  | `/api/auth/refresh` | Rotate refresh token and get new access token |
+| `POST` | `/api/auth/signup` | Create account and receive JWT |
+| `POST` | `/api/auth/signin` | Authenticate and receive JWT |
+| `POST` | `/api/auth/logout` | Invalidate session client-side |
 | `GET`  | `/api/jobs` | List jobs with filters/pagination |
 | `POST` | `/api/jobs` | Create job (employer) |
 | `PUT`  | `/api/jobs/:id` | Update job (employer) |
@@ -156,7 +154,7 @@ Additional routes exist for applications and market stats—use the source for t
 | Issue | Fix |
 |-------|-----|
 | `Network error - backend server may be unavailable` | Confirm backend is running and `VITE_API_BASE_URL` is correct. |
-| `Session expired. Please log in again.` | Token rotation failed, likely due to an expired or revoked refresh token. Re-authenticate. |
+| `Token expired` responses | Re-authenticate; tokens last 7 days by default. |
 | No remote jobs returned | Verify `SERPER_API_KEY` and network access to Remotive. The UI will fall back to curated data if both fail. |
 | Mongo connection errors | Ensure `MONGODB_URI` is correct and accessible from your environment. |
 

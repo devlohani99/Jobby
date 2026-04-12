@@ -185,9 +185,9 @@ const Profile = ({ userType = 'jobseeker' }) => {
           <div className="border-b border-gray-200">
             <nav className="flex px-6">
               {[
-                { id: 'personal', label: 'Personal Info', icon: '👤' },
-                { id: 'professional', label: userType === 'jobseeker' ? 'Experience' : 'Company', icon: '💼' },
-                { id: 'preferences', label: userType === 'jobseeker' ? 'Job Preferences' : 'Hiring Preferences', icon: '⚙️' }
+                { id: 'personal', label: 'Personal Info' },
+                { id: 'professional', label: userType === 'jobseeker' ? 'Experience' : 'Company' },
+                { id: 'preferences', label: userType === 'jobseeker' ? 'Job Preferences' : 'Hiring Preferences' }
               ].map(tab => (
                 <button
                   key={tab.id}
@@ -198,7 +198,6 @@ const Profile = ({ userType = 'jobseeker' }) => {
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
                 >
-                  <span className="mr-2">{tab.icon}</span>
                   {tab.label}
                 </button>
               ))}
@@ -385,10 +384,7 @@ const Profile = ({ userType = 'jobseeker' }) => {
                       <label className="block text-sm font-medium text-gray-700 mb-1">Resume</label>
                       <div className="flex items-center space-x-3">
                         {profileData.professional.resumeUrl ? (
-                          <div className="flex items-center space-x-2">
-                            <span className="text-green-600">📄</span>
-                            <span className="text-gray-900">{profileData.professional.resumeUrl}</span>
-                          </div>
+                          <span className="text-gray-900">{profileData.professional.resumeUrl}</span>
                         ) : (
                           <span className="text-gray-500">No resume uploaded</span>
                         )}

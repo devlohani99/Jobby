@@ -105,15 +105,15 @@ const NotificationPanel = ({ isOpen, onClose }) => {
     const iconClass = "w-8 h-8 rounded-full flex items-center justify-center text-white text-sm";
     switch (type) {
       case 'application':
-        return <div className={`${iconClass} bg-blue-500`}>📝</div>;
+        return <div className={`${iconClass} bg-blue-500`}>A</div>;
       case 'status_update':
-        return <div className={`${iconClass} bg-green-500`}>✅</div>;
+        return <div className={`${iconClass} bg-green-500`}>S</div>;
       case 'interview':
-        return <div className={`${iconClass} bg-purple-500`}>🎯</div>;
+        return <div className={`${iconClass} bg-purple-500`}>I</div>;
       case 'job_match':
-        return <div className={`${iconClass} bg-orange-500`}>🔍</div>;
+        return <div className={`${iconClass} bg-orange-500`}>J</div>;
       default:
-        return <div className={`${iconClass} bg-gray-500`}>📢</div>;
+        return <div className={`${iconClass} bg-gray-500`}>N</div>;
     }
   };
 
@@ -193,7 +193,6 @@ const NotificationPanel = ({ isOpen, onClose }) => {
             </div>
           ) : notifications.length === 0 ? (
             <div className="text-center py-12">
-              <div className="text-gray-400 text-4xl mb-4">🔔</div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">No notifications</h3>
               <p className="text-gray-500">You're all caught up!</p>
             </div>

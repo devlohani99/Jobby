@@ -127,12 +127,9 @@ const MarketIntelligenceDashboard = () => {
       <div className="flex-1">
         <div className="max-w-7xl mx-auto p-6 space-y-6">
           <div className="bg-gradient-to-r from-blue-700 to-indigo-700 rounded-xl text-white p-6">
-            <div className="flex items-center space-x-3 mb-4">
-              <span className="text-3xl">📊</span>
-              <div>
-                <h1 className="text-2xl font-bold">India Job Market Intelligence</h1>
-                <p className="text-blue-100">Live insights tailored for Indian cities and industries</p>
-              </div>
+            <div className="mb-4">
+              <h1 className="text-2xl font-bold">India Job Market Intelligence</h1>
+              <p className="text-blue-100">Live insights tailored for Indian cities and industries</p>
             </div>
 
             <form onSubmit={handleSearch} className="bg-white/10 rounded-lg p-4">
@@ -165,7 +162,7 @@ const MarketIntelligenceDashboard = () => {
                     disabled={loading}
                     className="w-full px-4 py-2 bg-white text-blue-700 rounded-lg font-semibold hover:bg-white/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    {loading ? 'Analyzing...' : '🔍 Analyze India'}
+                    {loading ? 'Analyzing...' : 'Analyze India'}
                   </button>
                 </div>
               </div>
@@ -174,12 +171,9 @@ const MarketIntelligenceDashboard = () => {
 
           {error && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <div className="flex items-center space-x-2">
-                <span className="text-red-500 text-xl">⚠️</span>
-                <div>
-                  <h3 className="font-medium text-red-800">Unable to fetch market data</h3>
-                  <p className="text-red-600 text-sm">{error}</p>
-                </div>
+              <div>
+                <h3 className="font-medium text-red-800">Unable to fetch market data</h3>
+                <p className="text-red-600 text-sm">{error}</p>
               </div>
             </div>
           )}
@@ -203,38 +197,31 @@ const MarketIntelligenceDashboard = () => {
                   title="Average Salary"
                   value={salaryAverageDisplay}
                   trend={marketData.salaryData?.trend}
-                  icon="💰"
                   color="green"
                 />
                 <StatCard
                   title="Job Demand"
                   value={marketData.demandTrends?.level || 'N/A'}
                   trend={marketData.demandTrends?.growth}
-                  icon="📈"
                   color="blue"
                 />
                 <StatCard
                   title="Remote Opportunities"
                   value={marketData.remoteOpportunities?.percentage ? `${marketData.remoteOpportunities.percentage}%` : 'N/A'}
                   trend={marketData.remoteOpportunities?.trend}
-                  icon="🏠"
                   color="purple"
                 />
                 <StatCard
                   title="Market Confidence"
                   value={marketData.demandTrends?.confidence ? `${marketData.demandTrends.confidence}%` : 'N/A'}
                   trend={marketData.demandTrends?.sentiment}
-                  icon="🎯"
                   color="indigo"
                 />
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="bg-white rounded-lg border border-gray-200 p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                    <span className="mr-2">💰</span>
-                    Salary Insights (INR)
-                  </h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Salary Insights (INR)</h3>
                   <div className="space-y-3">
                     <div className="flex justify-between">
                       <span className="text-gray-600">Average Salary</span>
@@ -260,10 +247,7 @@ const MarketIntelligenceDashboard = () => {
                 </div>
 
                 <div className="bg-white rounded-lg border border-gray-200 p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                    <span className="mr-2">🏢</span>
-                    Top Hiring Companies in India
-                  </h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Hiring Companies in India</h3>
                   <div className="space-y-3">
                     {companies.length > 0 ? (
                       companies.slice(0, 6).map((company, index) => (
@@ -277,10 +261,7 @@ const MarketIntelligenceDashboard = () => {
               </div>
 
               <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                  <span className="mr-2">🛠️</span>
-                  In-Demand Skills
-                </h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">In-Demand Skills</h3>
                 <div className="flex flex-wrap">
                   {skills.length > 0 ? (
                     skills.map((skill, index) => <SkillBadge key={`${skill}-${index}`} skill={skill} />)
@@ -291,10 +272,7 @@ const MarketIntelligenceDashboard = () => {
               </div>
 
               <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border border-purple-200 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                  <span className="mr-2">🌐</span>
-                  Remote Work Insights
-                </h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Remote Work Insights</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="text-center">
                     <div className="text-2xl font-bold text-purple-600">
@@ -333,7 +311,7 @@ const MarketIntelligenceDashboard = () => {
   );
 };
 
-const StatCard = ({ title, value, trend, icon, color }) => {
+const StatCard = ({ title, value, trend, color }) => {
   const colorMap = {
     green: 'text-green-600',
     blue: 'text-blue-600',
@@ -343,13 +321,10 @@ const StatCard = ({ title, value, trend, icon, color }) => {
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm text-gray-500">{title}</p>
-          <p className="text-2xl font-semibold text-gray-900">{value || 'N/A'}</p>
-        </div>
-        <span className={`text-3xl ${colorMap[color] || 'text-gray-400'}`}>{icon}</span>
-      </div>
+          <div>
+            <p className="text-sm text-gray-500">{title}</p>
+            <p className="text-2xl font-semibold text-gray-900">{value || 'N/A'}</p>
+          </div>
       {trend && (
         <p className={`mt-2 text-sm font-medium ${normalizeTrendColor(trend)}`}>
           {typeof trend === 'number' ? `${trend}%` : trend}

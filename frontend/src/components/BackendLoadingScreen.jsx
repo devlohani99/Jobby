@@ -7,11 +7,11 @@ const BackendLoadingScreen = ({ onBackendReady }) => {
   const [retryCount, setRetryCount] = useState(0);
 
   const loadingStages = [
-    { text: "Waking up backend servers...", icon: "🚀", duration: 5000 },
-    { text: "Initializing database connections...", icon: "🗄️", duration: 8000 },
-    { text: "Loading job intelligence APIs...", icon: "🔍", duration: 12000 },
-    { text: "Preparing your workspace...", icon: "⚙️", duration: 15000 },
-    { text: "Almost ready! Final checks...", icon: "✨", duration: 20000 }
+    { text: "Waking up backend servers...", duration: 5000 },
+    { text: "Initializing database connections...", duration: 8000 },
+    { text: "Loading job intelligence APIs...", duration: 12000 },
+    { text: "Preparing your workspace...", duration: 15000 },
+    { text: "Almost ready! Final checks...", duration: 20000 }
   ];
 
   const checkBackendHealth = async () => {
@@ -99,9 +99,7 @@ const BackendLoadingScreen = ({ onBackendReady }) => {
       <div className="min-h-screen bg-gradient-to-br from-green-400 via-blue-500 to-purple-600 flex items-center justify-center">
         <div className="text-center text-white">
           <div className="animate-bounce mb-4">
-            <div className="w-20 h-20 mx-auto bg-white rounded-full flex items-center justify-center">
-              <span className="text-4xl">✅</span>
-            </div>
+            <div className="w-20 h-20 mx-auto bg-white rounded-full"></div>
           </div>
           <h2 className="text-2xl font-bold mb-2">Backend Ready!</h2>
           <p className="text-lg opacity-90">Launching your job portal...</p>
@@ -151,12 +149,7 @@ const BackendLoadingScreen = ({ onBackendReady }) => {
                 borderRightColor: backendStatus === 'ready' ? '#10B981' : 'transparent'
               }}
             ></div>
-            {/* Inner circle with icon */}
-            <div className="absolute inset-2 bg-white/20 rounded-full flex items-center justify-center">
-              <span className="text-2xl animate-pulse">
-                {loadingStages[loadingStage]?.icon || '⚡'}
-              </span>
-            </div>
+            <div className="absolute inset-2 bg-white/20 rounded-full"></div>
           </div>
         </div>
 
@@ -200,7 +193,7 @@ const BackendLoadingScreen = ({ onBackendReady }) => {
         {elapsedTime > 15 && (
           <div className="mt-4 p-3 bg-white/10 rounded-lg border border-white/20">
             <p className="text-xs text-blue-100">
-              💡 <strong>Did you know?</strong> Free-tier servers need time to "wake up" - 
+              <strong>Did you know?</strong> Free-tier servers need time to "wake up" - 
               typically 30-60 seconds. Thanks for your patience!
             </p>
           </div>
@@ -209,7 +202,7 @@ const BackendLoadingScreen = ({ onBackendReady }) => {
         {/* Long wait message */}
         {elapsedTime > 45 && (
           <div className="mt-3 text-xs text-yellow-200">
-            <p>Taking longer than usual? The server might be extra sleepy today! 😴</p>
+            <p>Taking longer than usual? The server might be extra sleepy today!</p>
           </div>
         )}
       </div>

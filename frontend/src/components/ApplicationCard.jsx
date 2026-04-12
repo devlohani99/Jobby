@@ -20,16 +20,16 @@ const ApplicationCard = ({ application }) => {
 
   const getStatusIcon = (status) => {
     const statusIcons = {
-      'submitted': '📝',
-      'under-review': '👀',
-      'shortlisted': '⭐',
-      'interview-scheduled': '📅',
-      'interviewed': '💬',
-      'selected': '✅',
-      'rejected': '❌',
-      'withdrawn': '↩️'
+      'submitted': '',
+      'under-review': '',
+      'shortlisted': '',
+      'interview-scheduled': '',
+      'interviewed': '',
+      'selected': '',
+      'rejected': '',
+      'withdrawn': ''
     };
-    return statusIcons[status] || '📄';
+    return statusIcons[status] || '';
   };
 
   const formatDate = (dateString) => {
@@ -161,7 +161,7 @@ const ApplicationCard = ({ application }) => {
         {application.interviewDetails && application.status === 'interview-scheduled' && (
           <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
             <h4 className="text-sm font-semibold text-blue-900 mb-2">
-              🎯 Interview Scheduled
+              Interview Scheduled
             </h4>
             <div className="text-sm text-blue-800 space-y-1">
               <div>
@@ -194,7 +194,7 @@ const ApplicationCard = ({ application }) => {
         {application.feedback && (
           <div className="mb-4 p-4 bg-gray-50 rounded-lg">
             <h4 className="text-sm font-semibold text-gray-900 mb-2">
-              📝 Feedback
+              Feedback
             </h4>
             {application.feedback.rating && (
               <div className="flex items-center mb-2">

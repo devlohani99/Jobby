@@ -126,23 +126,21 @@ const AppContent = () => {
               <div className="hidden md:flex space-x-2 ml-8">
                 <button
                   onClick={() => setCurrentView('homepage')}
-                  className="px-4 py-2 rounded-xl font-medium text-sm transition-all duration-200 text-gray-600 hover:text-blue-600 hover:bg-blue-50 flex items-center space-x-2 group"
+                  className="px-4 py-2 rounded-xl font-medium text-sm transition-all duration-200 text-gray-600 hover:text-blue-600 hover:bg-blue-50"
                 >
-                  <span className="text-lg group-hover:scale-110 transition-transform duration-200">🏠</span>
-                  <span>Home</span>
+                  Home
                 </button>
                 <button
                   onClick={() => {
                     setCurrentView('dashboard');
                     setDashboardView('dashboard');
                   }}
-                  className={`px-4 py-2 rounded-xl font-medium text-sm transition-all duration-200 flex items-center space-x-2 ${
+                  className={`px-4 py-2 rounded-xl font-medium text-sm transition-all duration-200 ${
                     dashboardView === 'dashboard'
                       ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
                       : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
                   }`}
                 >
-                  <span className="mr-2">📊</span>
                   Dashboard
                 </button>
                 <button
@@ -156,7 +154,6 @@ const AppContent = () => {
                       : 'text-gray-600 hover:text-blue-600'
                   }`}
                 >
-                  <span className="mr-2">👤</span>
                   Profile
                 </button>
                 
@@ -251,7 +248,6 @@ const AppContent = () => {
                   }}
                   className="w-full text-left px-3 py-2 rounded-lg font-medium text-sm transition-colors text-gray-600 hover:text-blue-600 hover:bg-blue-50"
                 >
-                  <span className="mr-2">🏠</span>
                   Home
                 </button>
                 <button
@@ -266,7 +262,6 @@ const AppContent = () => {
                       : 'text-gray-600 hover:text-blue-600'
                   }`}
                 >
-                  <span className="mr-2">📊</span>
                   Dashboard
                 </button>
                 <button
@@ -281,7 +276,6 @@ const AppContent = () => {
                       : 'text-gray-600 hover:text-blue-600'
                   }`}
                 >
-                  <span className="mr-2">👤</span>
                   Profile
                 </button>
                 

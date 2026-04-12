@@ -119,7 +119,7 @@ const JobApplicationModal = ({ job, isOpen, onClose, onApplicationSuccess }) => 
                   <span>Applying...</span>
                 </div>
               ) : (
-                '🚀 Apply Now'
+                'Apply Now'
               )}
             </button>
           </div>

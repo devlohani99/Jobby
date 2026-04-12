@@ -76,19 +76,16 @@ const simplifyApplicationStatus = (status = 'submitted') => {
 const APPLICATION_STATUS_META = {
   submitted: {
     badge: 'Pending',
-    emoji: '⏳',
     classes: 'bg-gray-100 text-gray-800',
     message: 'The employer is still reviewing your application.',
   },
   selected: {
     badge: 'Selected',
-    emoji: '🎉',
     classes: 'bg-emerald-100 text-emerald-800',
     message: 'Great news! The employer marked you as selected.',
   },
   rejected: {
     badge: 'Not Selected',
-    emoji: '❌',
     classes: 'bg-red-100 text-red-700',
     message: 'The employer marked you as not selected for this role.',
   },
@@ -533,8 +530,8 @@ const JobSeekerDashboard = ({ onNavigateHome }) => {
         <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-1">
           <nav className="flex gap-2">
             {[
-              { id: 'jobs', label: 'Browse Jobs', icon: '🔍' },
-              { id: 'applications', label: 'My Applications', icon: '📋' }
+              { id: 'jobs', label: 'Browse Jobs' },
+              { id: 'applications', label: 'My Applications' }
             ].map(tab => (
               <button
                 key={tab.id}
@@ -545,7 +542,6 @@ const JobSeekerDashboard = ({ onNavigateHome }) => {
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                 }`}
               >
-                <span className="text-lg">{tab.icon}</span>
                 <span>{tab.label}</span>
               </button>
             ))}
@@ -559,7 +555,7 @@ const JobSeekerDashboard = ({ onNavigateHome }) => {
             {/* Enhanced Search and Filters */}
             <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 p-8">
               <div className="mb-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">🔍 Find Your Perfect Job</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Find Your Perfect Job</h2>
                 <p className="text-gray-600">Discover opportunities tailored to your skills and preferences</p>
               </div>
               
@@ -592,26 +588,26 @@ const JobSeekerDashboard = ({ onNavigateHome }) => {
                 {/* Advanced Filters */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700">📂 Category</label>
+                    <label className="block text-sm font-medium text-gray-700">Category</label>
                     <select
                       value={filters.category}
                       onChange={(e) => setFilters({ ...filters, category: e.target.value })}
                       className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
                     >
                       <option value="">All Categories</option>
-                      <option value="software-development">💻 Software Development</option>
-                      <option value="data-science">📊 Data Science</option>
-                      <option value="design">🎨 Design</option>
-                      <option value="marketing">📢 Marketing</option>
-                      <option value="finance">💰 Finance</option>
-                      <option value="healthcare">🏥 Healthcare</option>
-                      <option value="education">🎓 Education</option>
+                      <option value="software-development">Software Development</option>
+                      <option value="data-science">Data Science</option>
+                      <option value="design">Design</option>
+                      <option value="marketing">Marketing</option>
+                      <option value="finance">Finance</option>
+                      <option value="healthcare">Healthcare</option>
+                      <option value="education">Education</option>
                     </select>
                   </div>
 
                   {jobSource === 'local' && (
                     <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-700">📍 Location</label>
+                      <label className="block text-sm font-medium text-gray-700">Location</label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                           <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -631,7 +627,7 @@ const JobSeekerDashboard = ({ onNavigateHome }) => {
                   )}
 
                   <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700">⏰ Employment Type</label>
+                    <label className="block text-sm font-medium text-gray-700">Employment Type</label>
                     <select
                       value={filters.employmentType}
                       onChange={(e) => setFilters({ ...filters, employmentType: e.target.value })}
@@ -648,16 +644,16 @@ const JobSeekerDashboard = ({ onNavigateHome }) => {
 
                   {jobSource === 'local' && (
                     <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-700">🏢 Work Type</label>
+                      <label className="block text-sm font-medium text-gray-700">Work Type</label>
                       <select
                         value={filters.jobType}
                         onChange={(e) => setFilters({ ...filters, jobType: e.target.value })}
                         className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
                       >
                         <option value="">All Locations</option>
-                        <option value="remote">🏠 Remote</option>
-                        <option value="on-site">🏢 On-site</option>
-                        <option value="hybrid">🔄 Hybrid</option>
+                        <option value="remote">Remote</option>
+                        <option value="on-site">On-site</option>
+                        <option value="hybrid">Hybrid</option>
                       </select>
                     </div>
                   )}
@@ -816,7 +812,7 @@ const JobSeekerDashboard = ({ onNavigateHome }) => {
                   onClick={clearFilters}
                   className="bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg"
                 >
-                  🗑️ Clear All Filters
+                  Clear All Filters
                 </button>
               </div>
             )}
@@ -897,7 +893,6 @@ const JobSeekerDashboard = ({ onNavigateHome }) => {
                         
                         <div className="text-right ml-4">
                           <span className={`inline-flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium ${statusMeta.classes}`}>
-                            <span>{statusMeta.emoji}</span>
                             <span>{statusMeta.badge}</span>
                           </span>
                           <p className="text-xs text-gray-500 mt-2 max-w-xs ml-auto">
@@ -953,7 +948,7 @@ const JobSeekerDashboard = ({ onNavigateHome }) => {
                   onClick={() => setActiveTab('jobs')}
                   className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-3 rounded-lg font-medium transition-all duration-200 transform hover:scale-105 shadow-lg"
                 >
-                  🔍 Browse Jobs
+                  Browse Jobs
                 </button>
               </div>
             )}

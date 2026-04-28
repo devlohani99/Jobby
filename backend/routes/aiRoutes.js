@@ -28,6 +28,11 @@ const createGroqClient = () => {
     return new Groq({ apiKey });
 };
 
+const GROQ_MODELS = [
+    'llama-3.1-8b-instant',
+    'llama-3.3-70b-versatile'
+];
+
 router.post('/cover-letter', async (req, res) => {
     try {
         const { jobDetails, userProfile } = req.body;
@@ -63,12 +68,26 @@ Guidelines:
             });
         }
 
-        const chatCompletion = await groq.chat.completions.create({
-            messages: [{ role: 'user', content: prompt }],
-            model: 'llama3-8b-8192',
-            temperature: 0.9,
-            max_tokens: 1024,
-        });
+        let chatCompletion = null;
+        let lastError = null;
+
+        for (const model of GROQ_MODELS) {
+            try {
+                chatCompletion = await groq.chat.completions.create({
+                    messages: [{ role: 'user', content: prompt }],
+                    model,
+                    temperature: 0.9,
+                    max_completion_tokens: 1024,
+                });
+                break;
+            } catch (err) {
+                lastError = err;
+            }
+        }
+
+        if (!chatCompletion) {
+            throw lastError || new Error('Groq completion failed');
+        }
 
         const coverLetter = chatCompletion.choices[0]?.message?.content || buildFallbackCoverLetter({ jobDetails, userProfile });
 

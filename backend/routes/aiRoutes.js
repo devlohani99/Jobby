@@ -21,7 +21,7 @@ const buildFallbackCoverLetter = ({ jobDetails = {}, userProfile = {} }) => {
 };
 
 const createGroqClient = () => {
-    const apiKey = process.env.GROQ_API_KEY;
+    const apiKey = process.env.GROQ_API_KEY?.trim();
     if (!apiKey) {
         return null;
     }
@@ -66,7 +66,7 @@ Guidelines:
         const chatCompletion = await groq.chat.completions.create({
             messages: [{ role: 'user', content: prompt }],
             model: 'llama3-8b-8192',
-            temperature: 0.7,
+            temperature: 0.9,
             max_tokens: 1024,
         });
 
@@ -75,6 +75,12 @@ Guidelines:
         res.json({ coverLetter, source: 'groq' });
     } catch (error) {
         console.error('Groq AI generation error:', error);
+        const hasGroqKey = Boolean(process.env.GROQ_API_KEY?.trim());
+        if (hasGroqKey) {
+            return res.status(502).json({
+                error: 'Groq request failed. Please check API key validity, quota, or model availability.'
+            });
+        }
         const { jobDetails, userProfile } = req.body || {};
         const coverLetter = buildFallbackCoverLetter({ jobDetails, userProfile });
         res.json({ coverLetter, source: 'template' });

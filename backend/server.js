@@ -1,10 +1,10 @@
-require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const connectDB = require('./config/database');
 const { handleErrors } = require('./middleware/handleErrors');
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 
 // Import routes
 const signUpRoute = require('./routes/signUpRoute');

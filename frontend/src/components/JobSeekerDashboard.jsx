@@ -115,6 +115,7 @@ const JobSeekerDashboard = ({ onNavigateHome }) => {
   const [aiGeneratedLetter, setAiGeneratedLetter] = useState('');
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [aiError, setAiError] = useState('');
+  const [copyState, setCopyState] = useState('idle');
 
   useEffect(() => {
     filtersSnapshotRef.current = filters;
@@ -485,6 +486,42 @@ const JobSeekerDashboard = ({ onNavigateHome }) => {
       setAiError(errorMessage);
     } finally {
       setIsGeneratingAI(false);
+    }
+  };
+
+  const handleCopyGeneratedLetter = async () => {
+    if (!aiGeneratedLetter?.trim()) {
+      return;
+    }
+
+    const fallbackCopy = () => {
+      const textArea = document.createElement('textarea');
+      textArea.value = aiGeneratedLetter;
+      textArea.setAttribute('readonly', '');
+      textArea.style.position = 'fixed';
+      textArea.style.opacity = '0';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      const copied = document.execCommand('copy');
+      document.body.removeChild(textArea);
+      return copied;
+    };
+
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(aiGeneratedLetter);
+      } else {
+        const copied = fallbackCopy();
+        if (!copied) {
+          throw new Error('Copy failed');
+        }
+      }
+      setCopyState('copied');
+      setTimeout(() => setCopyState('idle'), 1500);
+    } catch (error) {
+      setCopyState('failed');
+      setTimeout(() => setCopyState('idle'), 2000);
     }
   };
 
@@ -1060,10 +1097,10 @@ const JobSeekerDashboard = ({ onNavigateHome }) => {
                     <label className="block text-sm font-bold text-gray-800 uppercase tracking-wider">Generated Result</label>
                     {aiGeneratedLetter && (
                       <button 
-                        onClick={() => navigator.clipboard.writeText(aiGeneratedLetter)}
+                        onClick={handleCopyGeneratedLetter}
                         className="text-xs text-blue-600 hover:text-blue-800 font-semibold"
                       >
-                        Copy to Clipboard
+                        {copyState === 'copied' ? 'Copied' : copyState === 'failed' ? 'Copy failed' : 'Copy to Clipboard'}
                       </button>
                     )}
                   </div>

@@ -303,6 +303,10 @@ const notificationAPI = {
   updateNotificationSettings: (settings) => api.put('/notifications/settings', settings),
 };
 
+const aiAPI = {
+  generateCoverLetter: (data) => api.post('/ai/cover-letter', data),
+};
+
 const tokenManager = {
   setToken: (token) => {
     localStorage.setItem('token', token);
@@ -354,6 +358,7 @@ export {
   filtersAPI,
   fileAPI,
   notificationAPI,
+  aiAPI,
   tokenManager 
 };
 

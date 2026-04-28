@@ -53,7 +53,7 @@ app.use('/api/applications', applicationRoutes);
 app.use('/api', remoteJobsRoute);
 app.use('/api', require('./routes/marketIntelligence'));
 app.use('/api', require('./routes/health'));
-
+app.use('/api/ai', require('./routes/aiRoutes'));
 app.get('/', (req, res) => {
   res.json({ 
     message: 'Jobby API is running',

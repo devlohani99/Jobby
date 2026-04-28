@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { jobAPI, applicationAPI } from '../services/api';
+import { aiAPI } from '../services/enhancedAPI';
 import JobApplicationModal from './JobApplicationModal';
 
 
@@ -108,6 +109,12 @@ const JobSeekerDashboard = ({ onNavigateHome }) => {
   });
   const savedLocalFiltersRef = useRef({ location: '', jobType: '' });
   const filtersSnapshotRef = useRef(filters);
+
+  // AI Cover Letter State
+  const [aiJobDetails, setAiJobDetails] = useState({ title: '', company: '', description: '' });
+  const [aiGeneratedLetter, setAiGeneratedLetter] = useState('');
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+  const [aiError, setAiError] = useState('');
 
   useEffect(() => {
     filtersSnapshotRef.current = filters;
@@ -458,6 +465,29 @@ const JobSeekerDashboard = ({ onNavigateHome }) => {
     }
   };
 
+  const handleGenerateStandaloneLetter = async () => {
+    if (!aiJobDetails.title || !aiJobDetails.company || !aiJobDetails.description) {
+      setAiError('Please fill in all job details to generate a cover letter.');
+      return;
+    }
+    setIsGeneratingAI(true);
+    setAiError('');
+    try {
+      const userProfile = JSON.parse(localStorage.getItem('user') || '{}');
+      const response = await aiAPI.generateCoverLetter({
+        jobDetails: aiJobDetails,
+        userProfile
+      });
+      setAiGeneratedLetter(response.coverLetter);
+    } catch (err) {
+      console.error('Failed to generate standalone cover letter:', err);
+      const errorMessage = err.message || 'Failed to generate cover letter. Ensure your AI backend is running and configured.';
+      setAiError(errorMessage);
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Header */}
@@ -531,7 +561,8 @@ const JobSeekerDashboard = ({ onNavigateHome }) => {
           <nav className="flex gap-2">
             {[
               { id: 'jobs', label: 'Browse Jobs' },
-              { id: 'applications', label: 'My Applications' }
+              { id: 'applications', label: 'My Applications' },
+              { id: 'ai-cover-letter', label: '✨ AI Cover Letter' }
             ].map(tab => (
               <button
                 key={tab.id}
@@ -955,7 +986,98 @@ const JobSeekerDashboard = ({ onNavigateHome }) => {
           </div>
         )}
 
+        {activeTab === 'ai-cover-letter' && (
+          <div className="space-y-6">
+            <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 p-8">
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">✨ AI Cover Letter Generator</h2>
+                <p className="text-gray-600">Enter the details of a job you're interested in, and our AI will craft a personalized cover letter for you instantly.</p>
+              </div>
 
+              {aiError && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+                  {aiError}
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Left side: Input Form */}
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Job Title</label>
+                    <input
+                      type="text"
+                      value={aiJobDetails.title}
+                      onChange={(e) => setAiJobDetails({...aiJobDetails, title: e.target.value})}
+                      placeholder="e.g. Senior React Developer"
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Company Name</label>
+                    <input
+                      type="text"
+                      value={aiJobDetails.company}
+                      onChange={(e) => setAiJobDetails({...aiJobDetails, company: e.target.value})}
+                      placeholder="e.g. Google"
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Job Description</label>
+                    <textarea
+                      value={aiJobDetails.description}
+                      onChange={(e) => setAiJobDetails({...aiJobDetails, description: e.target.value})}
+                      placeholder="Paste the job description here..."
+                      rows={6}
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    />
+                  </div>
+                  <button
+                    onClick={handleGenerateStandaloneLetter}
+                    disabled={isGeneratingAI}
+                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-xl font-semibold transition-all shadow-lg flex items-center justify-center gap-2"
+                  >
+                    {isGeneratingAI ? (
+                      <>
+                        <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span>Generating Magic...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>✨ Generate Cover Letter</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {/* Right side: Generated Letter */}
+                <div className="bg-gray-50 rounded-2xl p-6 border-2 border-gray-100 flex flex-col h-full">
+                  <div className="flex justify-between items-center mb-4">
+                    <label className="block text-sm font-bold text-gray-800 uppercase tracking-wider">Generated Result</label>
+                    {aiGeneratedLetter && (
+                      <button 
+                        onClick={() => navigator.clipboard.writeText(aiGeneratedLetter)}
+                        className="text-xs text-blue-600 hover:text-blue-800 font-semibold"
+                      >
+                        Copy to Clipboard
+                      </button>
+                    )}
+                  </div>
+                  <textarea
+                    value={aiGeneratedLetter}
+                    onChange={(e) => setAiGeneratedLetter(e.target.value)}
+                    placeholder="Your AI generated cover letter will appear here..."
+                    className="w-full flex-1 px-4 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-gray-700 leading-relaxed min-h-[300px]"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Job Application Modal */}

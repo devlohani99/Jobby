@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
-import { applicationAPI } from '../services/enhancedAPI';
+import { applicationAPI, aiAPI } from '../services/enhancedAPI';
 
 const JobApplicationModal = ({ job, isOpen, onClose, onApplicationSuccess }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [userProfile, setUserProfile] = useState(null);
+  const [coverLetter, setCoverLetter] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
     // Get user profile from localStorage
@@ -20,7 +22,8 @@ const JobApplicationModal = ({ job, isOpen, onClose, onApplicationSuccess }) => 
 
     try {
       await applicationAPI.applyForJob(job._id, {
-        profileData: userProfile
+        profileData: userProfile,
+        coverLetter
       });
       
       onApplicationSuccess?.();
@@ -31,6 +34,27 @@ const JobApplicationModal = ({ job, isOpen, onClose, onApplicationSuccess }) => 
       setError(error.message || 'Failed to submit application. Please try again.');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleGenerateCoverLetter = async () => {
+    setIsGenerating(true);
+    setError('');
+    try {
+      const response = await aiAPI.generateCoverLetter({
+        jobDetails: {
+          title: job.title,
+          company: job.company,
+          description: job.description
+        },
+        userProfile
+      });
+      setCoverLetter(response.coverLetter);
+    } catch (err) {
+      console.error('Failed to generate cover letter:', err);
+      setError('Failed to generate cover letter using AI.');
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -92,6 +116,37 @@ const JobApplicationModal = ({ job, isOpen, onClose, onApplicationSuccess }) => 
               </div>
             </div>
           )}
+
+          <div className="mb-6">
+            <div className="flex justify-between items-center mb-2">
+              <label className="block text-sm font-medium text-gray-700">Cover Letter</label>
+              <button
+                type="button"
+                onClick={handleGenerateCoverLetter}
+                disabled={isGenerating || !userProfile}
+                className="text-sm flex items-center space-x-1 text-blue-600 hover:text-blue-800 disabled:text-gray-400 font-medium"
+              >
+                {isGenerating ? (
+                  <div className="flex items-center space-x-1">
+                    <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Generating...</span>
+                  </div>
+                ) : (
+                  <span>✨ Generate with AI</span>
+                )}
+              </button>
+            </div>
+            <textarea
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm"
+              rows={5}
+              placeholder="Write or generate a cover letter..."
+              value={coverLetter}
+              onChange={(e) => setCoverLetter(e.target.value)}
+            ></textarea>
+          </div>
 
           {/* Action Buttons */}
           <div className="flex space-x-4">
